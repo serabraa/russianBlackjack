@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class DeckOfCards : MonoBehaviour
+public class DeckOfCards 
 {
     private List<Card> cards;
     private Sprite cardBack;
@@ -23,12 +23,10 @@ public class DeckOfCards : MonoBehaviour
             {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}, {"9", 9}, {"10", 10}, {"Jack", 10},
             {"Queen", 10}, {"King", 10}, {"Ace", 11}
         };
-        string pathToback = "Cards/CardBack";
+        // cards.Clear();                                     
+
+        string pathToback = "Cards/CardBack";              
         cardBack = Resources.Load<Sprite>(pathToback);    //cardback qcenq
-        Debug.Log(cardBack ? "Card Back Loaded Successfully" : "Failed to load Card Back");
-
-        
-
 
         foreach(var suit in suits)
         {
@@ -37,11 +35,10 @@ public class DeckOfCards : MonoBehaviour
                 string path = $"Cards/{suit}_{rank}";
                 Sprite image = Resources.Load<Sprite>(path);
                 Card card = new Card(suit, rank, values[rank], image,cardBack);
-                Debug.Log(cardBack ? "Card Back Loaded Successfully" : "Failed to load Card Back");
-
                 cards.Add(card);
             }
         }
+        
     }
     public Card DrawCard()          //card qashel
     {
@@ -50,7 +47,9 @@ public class DeckOfCards : MonoBehaviour
             return null;            //ete card chka kalodi mej apa null
         }
         Card card = cards[Random.Range(0,cards.Count)];        //ete ka random me cardm kqashenq kalodic
+        Debug.Log(card.value + card.rank);
         cards.Remove(card);                                    //hanum enq kalodic
         return card;                                            
     }
+    
 }

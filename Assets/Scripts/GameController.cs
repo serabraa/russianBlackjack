@@ -11,6 +11,8 @@ public class GameController : MonoBehaviour
     int initialPosition = 0;
     int initialPositionEnemy = 0;
     int initialPositionY = 200;
+
+    bool enemyTurn = false;
     
     public Canvas canvas;
     private DeckOfCards deckOfCards;
@@ -24,6 +26,11 @@ public class GameController : MonoBehaviour
         DealInitialCards();
     }
 
+    void Update()
+    {
+        DrawCardForDealer();
+    }
+
     private void DealInitialCards()                 //dealing initial two cards for the player and for the de
     {
         Card playerCard1 = deckOfCards.DrawCard();
@@ -33,8 +40,9 @@ public class GameController : MonoBehaviour
         // Display cards on UI
         DisplayCard(playerCard1);
         DisplayCard(playerCard2);
-        DisplayEnemyCard(enemyCard1);
-        DisplayEnemyCardBack(enemyCard2);
+        DisplayEnemyCard(enemyCard1,true);
+        DisplayEnemyCard(enemyCard2,true);
+        
 
     }
 
@@ -45,17 +53,13 @@ public class GameController : MonoBehaviour
         UpdateScore(card.value);
     }
 
-        private void DisplayEnemyCard(Card card)
+        private void DisplayEnemyCard(Card card, bool withSprite)
     {
-        CreateImageOfACardAndAdjustPositions(card,"EnemyCard", initialPositionEnemy,initialPositionY,true);
+        CreateImageOfACardAndAdjustPositions(card,"EnemyCard", initialPositionEnemy,initialPositionY, withSprite);
         initialPositionEnemy = initialPositionEnemy + changePosition;
-
+        CalculateValue(card);
     }
-        private void DisplayEnemyCardBack(Card card)
-        {
-            CreateImageOfACardAndAdjustPositions(card,"EnemyCard", initialPositionEnemy,initialPositionY,false);
-            
-        }
+
 
 
         private void CreateImageOfACardAndAdjustPositions(Card card,string nameOfACard, int posX,int posY,bool spriteImage)
@@ -104,9 +108,10 @@ public class GameController : MonoBehaviour
         DisplayCard(playerCardDrawn);
     }
 
-    public void DrawCard()
+    public void DrawCardEnemy()
     {
         Card enemyCardDrawn = deckOfCards.DrawCard();
+        DisplayEnemyCard(enemyCardDrawn,true);
     }
 
     public void UpdateScore(int value)
@@ -126,30 +131,31 @@ public class GameController : MonoBehaviour
         }
         else 
         Debug.Log("you good!");
-
     }
     
     //ENEMY AI STARTS HERE
 
     private void CalculateValue(Card card)
     {
-        Debug.Log(card.rank);
-        Debug.Log(card.suit);
-        Debug.Log(card.value);
+        // Debug.Log(card.rank);
+        // Debug.Log(card.suit);
+        // Debug.Log(card.value);
         dealerScore = dealerScore + card.value;
-        CheckDealer(dealerScore);
     }
-    private void CheckDealer(int dlrscore)
+
+    private void DrawCardForDealer()
     {
-        if(dlrscore <17){
-            Debug.Log("chenq qashum 17 e kam mec");
-        }else DrawCardForDealer();
-    }
-    public void DrawCardForDealer()
-    {
-        Debug.Log("qashumenq qani or 17ic cacre");
+        if(enemyTurn == true && dealerScore<17){
+        // Debug.Log("qashumenq qani or 17ic cacre");
         Card drawenCard = deckOfCards.DrawCard();
         CalculateValue(drawenCard);
+        DisplayEnemyCard(drawenCard,true);
+        }
 
+    }
+
+    public void PlayerStand()
+    {
+        enemyTurn = true;
     }
 }
