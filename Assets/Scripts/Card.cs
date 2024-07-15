@@ -9,11 +9,12 @@ public class Card : MonoBehaviour
     public Sprite cardBack;     //hetevi masy cardi
 
 
-    public Card(string Suit, string Rank, int Value, Sprite CardImage )
+    public Card(string Suit, string Rank, int Value, Sprite CardImage,Sprite CardBack)
     {
         suit = Suit;
         rank = Rank;
         value = Value;
         cardImage = CardImage;
+        cardBack = CardBack;
     }
 }

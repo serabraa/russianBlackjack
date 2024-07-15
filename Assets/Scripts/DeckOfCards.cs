@@ -23,8 +23,10 @@ public class DeckOfCards : MonoBehaviour
             {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}, {"9", 9}, {"10", 10}, {"Jack", 10},
             {"Queen", 10}, {"King", 10}, {"Ace", 11}
         };
+        string pathToback = "Cards/CardBack";
+        cardBack = Resources.Load<Sprite>(pathToback);    //cardback qcenq
+        Debug.Log(cardBack ? "Card Back Loaded Successfully" : "Failed to load Card Back");
 
-        cardBack = Resources.Load<Sprite>("/Cards/CardBack");    //cardback qcenq
         
 
 
@@ -34,8 +36,9 @@ public class DeckOfCards : MonoBehaviour
             {
                 string path = $"Cards/{suit}_{rank}";
                 Sprite image = Resources.Load<Sprite>(path);
-                Card card = new Card(suit, rank, values[rank], image);
-                card.cardBack = cardBack;
+                Card card = new Card(suit, rank, values[rank], image,cardBack);
+                Debug.Log(cardBack ? "Card Back Loaded Successfully" : "Failed to load Card Back");
+
                 cards.Add(card);
             }
         }
