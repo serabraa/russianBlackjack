@@ -47,7 +47,7 @@ public class DeckOfCards
             return null;            //ete card chka kalodi mej apa null
         }
         Card card = cards[Random.Range(0,cards.Count)];        //ete ka random me cardm kqashenq kalodic
-        Debug.Log(card.value + card.rank);
+        // Debug.Log(card.value + card.rank);
         cards.Remove(card);                                    //hanum enq kalodic
         return card;                                            
     }
