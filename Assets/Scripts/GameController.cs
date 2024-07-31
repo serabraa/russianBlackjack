@@ -4,7 +4,9 @@ using TMPro;
 
 
 public class GameController : MonoBehaviour
-{
+{   
+    
+
     int userScore = 0;
     int dealerScore = 0;
     int changePosition = 140;
@@ -15,18 +17,21 @@ public class GameController : MonoBehaviour
     bool enemyTurn = false;
     
     public Canvas canvas;
+    private Dealer dealer;              // dealer for dealer things
+    private Player player;              // player for player things
     private DeckOfCards deckOfCards;
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
     [SerializeField] public TMP_Text userScoreUI;
-    [SerializeField] public TMP_Text userWonUI;
-    [SerializeField] public TMP_Text userLostUI;
-    [SerializeField] public TMP_Text blackJackUI;
-    [SerializeField] public TMP_Text drawUI;
+    [SerializeField] public UIManager uiManager;
 
 
     void Start()
-    {
+    {   
+        dealer = new Dealer();
+        player = new Player();
+        dealer.Setup(50);
+        player.Setup(50);
         deckOfCards = new DeckOfCards();
         DealInitialCards();
         CheckStateBeforeStand();
@@ -34,7 +39,7 @@ public class GameController : MonoBehaviour
 
     void Update()
     {
-        DrawCardForDealer();
+        // DrawCardForDealer();
     }
 
     private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
@@ -141,11 +146,11 @@ public class GameController : MonoBehaviour
         Debug.Log("dealer's score is" + dealerScore);
     }
 
-    private void DrawCardForDealer()
+    public void DrawCardForDealer()
     {
         if(enemyTurn==true)
         {   
-            if(dealerScore<17)
+            while(dealerScore<17)
              {
                 // Debug.Log("qashumenq qani or 17ic cacre");
                 Card drawenCard = deckOfCards.DrawCard();
@@ -175,18 +180,24 @@ public class GameController : MonoBehaviour
 
         if((userScore >dealerScore && userScore <=21) || dealerScore>21)
         {
-            userWonUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("win");
+            PlayerWon();
+            Debug.Log("players hp is "+player.Showhp());
+            Debug.Log("dealers hp is "+dealer.Showhp());
         }
         else if((userScore<dealerScore && dealerScore<=21 )|| userScore  >21)
         {
-            userLostUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("lose");
+            PlayerLost();
+            Debug.Log("players hp is "+player.Showhp());
+            Debug.Log("dealers hp is "+dealer.Showhp());
         }
         else if(userScore==dealerScore)
         {
-            drawUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("draw");
         }else if(userScore==21 && dealerScore!= 21)
         {
-            blackJackUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("blackjack");
         }
         
     }
@@ -196,11 +207,25 @@ public class GameController : MonoBehaviour
 
         if(userScore == 21)
         {
-            blackJackUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("blackjack");
         }
         else if (userScore >21)
         {
-            userLostUI.gameObject.SetActive(true);
+            uiManager.ShowMessage("lose");
         }
     }
+
+    public void PlayerWon()
+    {
+        player.AdjustHP(20);
+        dealer.AdjustHP(-20);
+    }
+       public void PlayerLost()
+    {
+        player.AdjustHP(-20);
+        dealer.AdjustHP(20);
+    }
+
+
+
 }
