@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text userLostUI;
     [SerializeField] public TMP_Text blackJackUI;
     [SerializeField] public TMP_Text drawUI;
+
     
  
     public void UpdateScore(int score)

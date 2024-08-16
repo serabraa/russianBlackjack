@@ -22,7 +22,6 @@ public class GameController : MonoBehaviour
     private DeckOfCards deckOfCards;
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
-    [SerializeField] public TMP_Text userScoreUI;
     [SerializeField] public UIManager uiManager;
 
 
@@ -130,7 +129,7 @@ public class GameController : MonoBehaviour
     public void UpdateScore(int value)
     {
         userScore = userScore + value;
-        userScoreUI.SetText("Score: " + userScore);
+        uiManager.UpdateScore(userScore);
         // CheckState();
     }
 
