@@ -23,6 +23,7 @@ public class GameController : MonoBehaviour
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
     [SerializeField] public UIManager uiManager;
+    [SerializeField] Transform cardContainer ;
 
 
     void Start()
@@ -78,6 +79,7 @@ public class GameController : MonoBehaviour
     private GameObject CreateGameObjectOfACard(string nameOfACard,Card card)
     {
         GameObject cardGO = new GameObject(nameOfACard);
+        cardGO.transform.SetParent(cardContainer,false);
         if(card == hiddenCard){
             hiddenCardGO =  cardGO;
         }
@@ -97,8 +99,7 @@ public class GameController : MonoBehaviour
         Image image = cardGameObject.AddComponent<Image>();
 
 
-        // Make the new GameObject a child of the canvas
-        cardGameObject.transform.SetParent(canvas.transform, false);
+        image.sprite = card.cardImage;
 
         AdjustPositions(card, image, posX, posY);
     }
@@ -107,10 +108,7 @@ public class GameController : MonoBehaviour
     {
         // Optional: Set the size of the card image
         image.rectTransform.sizeDelta = new Vector2(128, 196); // Set size of the card image
-        //avelacnumenq imagei vra mer cardi sprite
 
-        image.sprite = card.cardImage;
-        
         // Optional: Position the card on the canvas
         image.rectTransform.anchoredPosition = new Vector2(posX, posY); // Position the card in the center or wherever you need it   
     }
@@ -181,15 +179,17 @@ public class GameController : MonoBehaviour
         {
             uiManager.ShowMessage("win");
             PlayerWon();
-            Debug.Log("players hp is "+player.Showhp());
-            Debug.Log("dealers hp is "+dealer.Showhp());
+            // uiManager.UpdateDealersHealth(dealer.Showhp());
+            // uiManager.UpdatePlayersHealth(player.Showhp());
+            // Debug.Log("players hp is "+player.Showhp());
+            // Debug.Log("dealers hp is "+dealer.Showhp());
         }
         else if((userScore<dealerScore && dealerScore<=21 )|| userScore  >21)
         {
             uiManager.ShowMessage("lose");
             PlayerLost();
-            Debug.Log("players hp is "+player.Showhp());
-            Debug.Log("dealers hp is "+dealer.Showhp());
+            // Debug.Log("players hp is "+player.Showhp());
+            // Debug.Log("dealers hp is "+dealer.Showhp());
         }
         else if(userScore==dealerScore)
         {
@@ -198,6 +198,8 @@ public class GameController : MonoBehaviour
         {
             uiManager.ShowMessage("blackjack");
         }
+            uiManager.UpdateDealersHealth(dealer.Showhp());
+            uiManager.UpdatePlayersHealth(player.Showhp());
         
     }
 

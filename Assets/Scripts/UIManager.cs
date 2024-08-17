@@ -7,9 +7,23 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text userLostUI;
     [SerializeField] public TMP_Text blackJackUI;
     [SerializeField] public TMP_Text drawUI;
+    [SerializeField] public TMP_Text playersHealth;
+    [SerializeField] public TMP_Text dealersHealth;
+    
 
     
  
+    public void UpdateDealersHealth(int dealerHealth)
+    {
+        dealersHealth.SetText("Dealer's health is " + dealerHealth );
+    }
+
+    public void UpdatePlayersHealth(int playerHealth)
+    {
+        playersHealth.SetText("Player's health is " + playerHealth );
+    }
+
+
     public void UpdateScore(int score)
     {
         userScoreUI.SetText("Score: " + score);

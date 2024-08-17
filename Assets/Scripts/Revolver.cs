@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class Revolver : MonoBehaviour
@@ -7,9 +6,20 @@ public class Revolver : MonoBehaviour
     bool[] ammo = new bool[6];
     int ammoCount = 0;
     int hammerIndex = 0;
+    [SerializeField] Sprite [] cylinderSprites;
+    // [SerializeField] GameObject cylinder;
+    [SerializeField] Image cylinderImage;
 
 
+    void Start()
+    {
+        cylinderImage.sprite = cylinderSprites[ammoCount];
 
+    }
+    private void ChangeCylinderSprite()
+    {
+        cylinderImage.sprite = cylinderSprites[ammoCount];
+    }
     public void CylinderRotation()
     {
         if(hammerIndex==5)
@@ -20,6 +30,7 @@ public class Revolver : MonoBehaviour
         hammerIndex +=1;
         }
         Debug.Log("hammer is pointing at " + hammerIndex);
+        ChangeCylinderSprite();
     }
 
     public void ShowCurrentPosition()
@@ -27,13 +38,19 @@ public class Revolver : MonoBehaviour
         Debug.Log(ammo[hammerIndex]? "Bullet present" : "No bullet");
     }
 
-    public void PutABullet()
-{
-    if (ammoCount == ammo.Length)
+    
+    
+    public void BuyABullet()
     {
-        Debug.Log("All positions are filled");
-        return;
+        if (ammoCount == ammo.Length)
+        {
+            Debug.Log("Can not but more ammo");
+            return;
+        }
+        PutABullet();
     }
+    private void PutABullet()
+{
 
     int bulletPosition = Random.Range(0, ammo.Length);
     while (ammo[bulletPosition]) // Only retry if the randomly selected position is filled
@@ -44,6 +61,7 @@ public class Revolver : MonoBehaviour
     ammo[bulletPosition] = true;
     ammoCount++;
     Debug.Log($"Bullet placed at position {bulletPosition}");
+    ChangeCylinderSprite();
 }
 
 
@@ -58,6 +76,7 @@ public class Revolver : MonoBehaviour
             ammo[hammerIndex]=false;
             ammoCount--;
             Debug.Log("Shot was taken");
+            ChangeCylinderSprite();
         }
 
 
