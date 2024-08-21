@@ -9,13 +9,10 @@ public class GameController : MonoBehaviour
 
     int userScore = 0;
     int dealerScore = 0;
-    int changePosition = 140;
-    int initialPosition = 0;
-    int initialPositionEnemy = 0;
-    int initialPositionY = 200;
-
+    // int changePosition = 140;
     bool enemyTurn = false;
-    
+    int aceCountPlayer= 0;              // ace counting to track the ace conditions
+    int aceCountDealer = 0;             // ace counting to track the ace conditions
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
     private Player player;              // player for player things
@@ -23,7 +20,9 @@ public class GameController : MonoBehaviour
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
     [SerializeField] public UIManager uiManager;
-    [SerializeField] Transform cardContainer ;
+    [SerializeField] private Transform playerCardsPanel; // Assign this in Unity Editor
+    [SerializeField] private Transform dealerCardsPanel; // Assign this in Unity Editor
+
 
 
     void Start()
@@ -48,6 +47,12 @@ public class GameController : MonoBehaviour
         Card playerCard2 = deckOfCards.DrawCard();
         Card enemyCard1 = deckOfCards.DrawCard();
         Card enemyCard2 = deckOfCards.DrawCard();
+    //
+        InitialCheckForTuz(playerCard1,false);
+        InitialCheckForTuz(playerCard2,false);
+        InitialCheckForTuz(enemyCard1,true);
+        InitialCheckForTuz(enemyCard2,true);
+    //
         enemyCard2.HideCard();
         hiddenCard = enemyCard2;
         // Display cards on UI
@@ -59,98 +64,111 @@ public class GameController : MonoBehaviour
 
     }
 
+    // //////////// start
+    private void InitialCheckForTuz(Card card, bool isEnemy)        //counts initial aces for further handling logic
+    {
+        if(card.rank =="Ace")
+        {
+            if(isEnemy)
+            {
+                aceCountDealer++;
+            }else
+            {
+                aceCountPlayer++;
+            }
+            
+        }
+        
+    }
+
+    private void TuzRecalculationHandling(bool isEnemy)         //handles initialy dealt ace value's logic (1 or 11)
+    {
+        
+        if(!isEnemy && aceCountPlayer!=0  && userScore>21 )
+        {
+            userScore -=10;
+            aceCountPlayer--;
+        }else if(isEnemy && aceCountDealer!=0 && dealerScore>21 )
+        {
+            dealerScore-=10;
+            aceCountDealer--;
+        }
+    }
+    private void DrawnTuzCaseCheckPlayer(Card card)           // Ace check for cards that are being drawn
+    {
+        if(card.rank=="Ace" && userScore >21)
+        {
+            userScore=userScore-10;
+        }
+    }
+
+    private void DrawnTuzCaseCheckDealer(Card card)           // Ace check for cards that are being drawn
+    {
+        if(card.rank=="Ace" && dealerScore >21)
+        {
+            dealerScore=dealerScore-10;
+        }
+    }
+
+    // //////////// end
+
     private void DisplayCard(Card card)
     {
-        CreateImageOfACardAndAdjustPositions(card,"PlayerCard",initialPosition,0);
-        initialPosition = initialPosition + changePosition;
+        CreateAndPositionCard(card, playerCardsPanel, true);
         UpdateScore(card.value);
     }
 
-
-    private void DisplayEnemyCard(Card card)                           //displays enemy's card and calculates it's value
+    private void DisplayEnemyCard(Card card)
     {
-        CreateImageOfACardAndAdjustPositions(card,"EnemyCard", initialPositionEnemy,initialPositionY);
-        initialPositionEnemy = initialPositionEnemy + changePosition;
+        CreateAndPositionCard(card, dealerCardsPanel, false);
         CalculateValue(card);
     }
 
-
-
-    private GameObject CreateGameObjectOfACard(string nameOfACard,Card card)
+    private void CreateAndPositionCard(Card card, Transform parentPanel, bool isPlayer)
     {
-        GameObject cardGO = new GameObject(nameOfACard);
-        cardGO.transform.SetParent(cardContainer,false);
-        if(card == hiddenCard){
-            hiddenCardGO =  cardGO;
+        string cardName = isPlayer? "PlayerCard" : "DealelCard";
+        GameObject cardGameObject = new GameObject(cardName);
+        if (card == hiddenCard)
+        {
+            hiddenCardGO = cardGameObject;
         }
-        return cardGO;
-    }
+        cardGameObject.transform.SetParent(parentPanel, false);
 
-    
-
-
-    private void CreateImageOfACardAndAdjustPositions(Card card,string nameOfACard, int posX,int posY)
-    {
-        
-        // sarqumenq mi hat gameobject anuny Card
-        GameObject cardGameObject = CreateGameObjectOfACard(nameOfACard,card);
-
-        // Add the Image component to the GameObject
         Image image = cardGameObject.AddComponent<Image>();
-
-
         image.sprite = card.cardImage;
 
-        AdjustPositions(card, image, posX, posY);
+        RectTransform rect = cardGameObject.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(128, 196); // Card size
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
+
+        AdjustCardPosition(parentPanel, rect, isPlayer);
     }
 
-    private void AdjustPositions(Card card, Image image, int posX,int posY)
+    private void AdjustCardPosition(Transform parentPanel, RectTransform rect, bool isPlayer)
     {
-        // Optional: Set the size of the card image
-        image.rectTransform.sizeDelta = new Vector2(128, 196); // Set size of the card image
-
-        // Optional: Position the card on the canvas
-        image.rectTransform.anchoredPosition = new Vector2(posX, posY); // Position the card in the center or wherever you need it   
+        int cardCount = parentPanel.childCount - 1; // Existing children count before adding new card
+        float offset = cardCount * 140; // Horizontal offset; adjust as necessary
+        rect.anchoredPosition = new Vector2(offset, 0); // Set position relative to the parent panel
     }
-
 
 
 
     public void DrawCardPlayer()                        //this one is for the player's card drawing
     {
         Card playerCardDrawn = deckOfCards.DrawCard();
+        DrawnTuzCaseCheckPlayer(playerCardDrawn);                  //if drawn card is an Ace and userscore >21 then it becomes 1
         DisplayCard(playerCardDrawn);
     }
 
 
-
-    public void UpdateScore(int value)
-    {
-        userScore = userScore + value;
-        uiManager.UpdateScore(userScore);
-        // CheckState();
-    }
-
-    
-    //ENEMY AI STARTS HERE
-
-    private void CalculateValue(Card card)
-    {
-        // Debug.Log(card.rank);
-        // Debug.Log(card.suit);
-        // Debug.Log(card.value);
-        dealerScore = dealerScore + card.value;
-        Debug.Log("dealer's score is" + dealerScore);
-    }
-
-    public void DrawCardForDealer()
+    public void DrawCardForDealer()                 //if <17 the draw card for dealer
     {
         if(enemyTurn==true)
         {   
             while(dealerScore<17)
              {
-                // Debug.Log("qashumenq qani or 17ic cacre");
                 Card drawenCard = deckOfCards.DrawCard();
+                DrawnTuzCaseCheckDealer(drawenCard);
                 DisplayEnemyCard(drawenCard);
             }
             if(dealerScore >=17)
@@ -160,6 +178,32 @@ public class GameController : MonoBehaviour
         }
 
     }
+
+
+
+    public void UpdateScore(int value)
+    {
+
+        userScore = userScore + value;
+        TuzRecalculationHandling(false);
+        uiManager.UpdateScore(userScore);
+        // CheckState();
+    }
+
+
+    //ENEMY AI STARTS HERE
+
+    private void CalculateValue(Card card)
+    {
+        // Debug.Log(card.rank);
+        // Debug.Log(card.suit);
+        // Debug.Log(card.value);
+        dealerScore = dealerScore + card.value;
+        TuzRecalculationHandling(true);
+        Debug.Log("dealer's score is" + dealerScore);
+    }
+
+
     private void ResetImage(Card card, GameObject cardGO)
     {
         Image image = cardGO.GetComponent<Image>();
@@ -168,8 +212,8 @@ public class GameController : MonoBehaviour
     public void PlayerStand()
     {
         enemyTurn = true;
-        hiddenCard.ExposeCard();
-        ResetImage(hiddenCard, hiddenCardGO);
+        hiddenCard.ExposeCard(); //exposes  the  hidden card
+        ResetImage(hiddenCard, hiddenCardGO);   //resets image to display the hidden card
     }
 
     public void CheckState()
@@ -178,18 +222,12 @@ public class GameController : MonoBehaviour
         if((userScore >dealerScore && userScore <=21) || dealerScore>21)
         {
             uiManager.ShowMessage("win");
-            PlayerWon();
-            // uiManager.UpdateDealersHealth(dealer.Showhp());
-            // uiManager.UpdatePlayersHealth(player.Showhp());
-            // Debug.Log("players hp is "+player.Showhp());
-            // Debug.Log("dealers hp is "+dealer.Showhp());
+            PlayerWon();    
         }
         else if((userScore<dealerScore && dealerScore<=21 )|| userScore  >21)
         {
             uiManager.ShowMessage("lose");
             PlayerLost();
-            // Debug.Log("players hp is "+player.Showhp());
-            // Debug.Log("dealers hp is "+dealer.Showhp());
         }
         else if(userScore==dealerScore)
         {
@@ -200,6 +238,7 @@ public class GameController : MonoBehaviour
         }
             uiManager.UpdateDealersHealth(dealer.Showhp());
             uiManager.UpdatePlayersHealth(player.Showhp());
+            // CheckGameEnd();
         
     }
 
@@ -226,6 +265,15 @@ public class GameController : MonoBehaviour
         player.AdjustHP(-20);
         dealer.AdjustHP(20);
     }
+
+
+    // public void CheckGameEnd()
+    // {
+    //     if(player.Showhp() >= 0 && dealer.Showhp()>=0)
+    //     {
+
+    //     }
+    // }
 
 
 
