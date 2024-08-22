@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
+
 
 
 public class GameController : MonoBehaviour
@@ -20,13 +22,15 @@ public class GameController : MonoBehaviour
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
     [SerializeField] public UIManager uiManager;
-    [SerializeField] private Transform playerCardsPanel; // Assign this in Unity Editor
-    [SerializeField] private Transform dealerCardsPanel; // Assign this in Unity Editor
+    [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
+    [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
+    [SerializeField] private Slider Bet;                // Slider for placing a bet
 
 
 
     void Start()
     {   
+        
         dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
@@ -36,10 +40,6 @@ public class GameController : MonoBehaviour
         CheckStateBeforeStand();
     }
 
-    void Update()
-    {
-        // DrawCardForDealer();
-    }
 
     private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
     {
@@ -48,10 +48,10 @@ public class GameController : MonoBehaviour
         Card enemyCard1 = deckOfCards.DrawCard();
         Card enemyCard2 = deckOfCards.DrawCard();
     //
-        InitialCheckForTuz(playerCard1,false);
-        InitialCheckForTuz(playerCard2,false);
-        InitialCheckForTuz(enemyCard1,true);
-        InitialCheckForTuz(enemyCard2,true);
+        CountInitialAces(playerCard1,false);
+        CountInitialAces(playerCard2,false);
+        CountInitialAces(enemyCard1,true);
+        CountInitialAces(enemyCard2,true);
     //
         enemyCard2.HideCard();
         hiddenCard = enemyCard2;
@@ -64,53 +64,71 @@ public class GameController : MonoBehaviour
 
     }
 
-    // //////////// start
-    private void InitialCheckForTuz(Card card, bool isEnemy)        //counts initial aces for further handling logic
+    // //////////// start of ace logic
+    private void CountInitialAces(Card card, bool isEnemy)        //counts aces for further handling logic
     {
         if(card.rank =="Ace")
         {
-            if(isEnemy)
-            {
-                aceCountDealer++;
-            }else
-            {
-                aceCountPlayer++;
-            }
-            
+            int aceCount = isEnemy ? ++aceCountDealer: ++aceCountPlayer;
+            Debug.Log($"Ace count for {(isEnemy ? "dealer" : "player")} is {aceCount}");
         }
         
     }
 
-    private void TuzRecalculationHandling(bool isEnemy)         //handles initialy dealt ace value's logic (1 or 11)
+    private void AceRecalculationFinal(bool isEnemy)         //handles initialy dealt ace value's logic (1 or 11)
     {
         
         if(!isEnemy && aceCountPlayer!=0  && userScore>21 )
         {
             userScore -=10;
             aceCountPlayer--;
+            Debug.Log("after -- ace count for the player is " + aceCountPlayer);
         }else if(isEnemy && aceCountDealer!=0 && dealerScore>21 )
         {
             dealerScore-=10;
             aceCountDealer--;
+            Debug.Log("after -- ace count for the dealer is " + aceCountDealer);
         }
     }
-    private void DrawnTuzCaseCheckPlayer(Card card)           // Ace check for cards that are being drawn
+    private void HandleDrawnAce(Card card,bool isEnemy)     // Ace check for cards that are being drawn, and value handling
     {
-        if(card.rank=="Ace" && userScore >21)
-        {
-            userScore=userScore-10;
+        if(card.rank=="Ace"){
+            int score = isEnemy? dealerScore:userScore;
+            if (score + card.value>21) {
+                if(isEnemy) dealerScore -= 10;
+                else userScore -= 10;
+            } else {
+                if(isEnemy) aceCountDealer++;
+                else aceCountPlayer++;
+                Debug.Log($"Ace count for {(isEnemy ? "dealer" : "player")} is {(isEnemy ? aceCountDealer : aceCountPlayer)}");
+            }
         }
     }
+    // private void DrawnAceHandlingPlayer(Card card)          // (player)
+    // {
+    //     if(card.rank=="Ace" && userScore + card.value >21)
+    //     {
+    //         userScore=userScore-10;
+    //     }else if(card.rank=="Ace" && userScore + card.value <=21)
+    //     {
+    //         aceCountPlayer++;
+    //         Debug.Log("ace count for the player is " + aceCountPlayer);
+    //     }
+    // }
 
-    private void DrawnTuzCaseCheckDealer(Card card)           // Ace check for cards that are being drawn
-    {
-        if(card.rank=="Ace" && dealerScore >21)
-        {
-            dealerScore=dealerScore-10;
-        }
-    }
+    // private void DrawnAceHandlingDealer(Card card)          // Ace check for cards that are being drawn, and value handling(dealer)
+    // {
+    //     if(card.rank=="Ace" && dealerScore + card.value >21)
+    //     {
+    //         dealerScore=dealerScore-10;
+    //     }else if(card.rank=="Ace" && dealerScore + card.value <=21)
+    //     {
+    //         aceCountDealer++;
+    //          Debug.Log("ace count for the dealer is " + aceCountDealer);
+    //     }
+    // }
 
-    // //////////// end
+    // //////////// end of ace logic
 
     private void DisplayCard(Card card)
     {
@@ -121,7 +139,7 @@ public class GameController : MonoBehaviour
     private void DisplayEnemyCard(Card card)
     {
         CreateAndPositionCard(card, dealerCardsPanel, false);
-        CalculateValue(card);
+        CalculateValue(card.value);
     }
 
     private void CreateAndPositionCard(Card card, Transform parentPanel, bool isPlayer)
@@ -156,7 +174,7 @@ public class GameController : MonoBehaviour
     public void DrawCardPlayer()                        //this one is for the player's card drawing
     {
         Card playerCardDrawn = deckOfCards.DrawCard();
-        DrawnTuzCaseCheckPlayer(playerCardDrawn);                  //if drawn card is an Ace and userscore >21 then it becomes 1
+        HandleDrawnAce(playerCardDrawn,false);                  //if drawn card is an Ace and userscore >21 then it becomes 1
         DisplayCard(playerCardDrawn);
     }
 
@@ -168,7 +186,7 @@ public class GameController : MonoBehaviour
             while(dealerScore<17)
              {
                 Card drawenCard = deckOfCards.DrawCard();
-                DrawnTuzCaseCheckDealer(drawenCard);
+                HandleDrawnAce(drawenCard,true); 
                 DisplayEnemyCard(drawenCard);
             }
             if(dealerScore >=17)
@@ -185,7 +203,7 @@ public class GameController : MonoBehaviour
     {
 
         userScore = userScore + value;
-        TuzRecalculationHandling(false);
+        AceRecalculationFinal(false);
         uiManager.UpdateScore(userScore);
         // CheckState();
     }
@@ -193,13 +211,13 @@ public class GameController : MonoBehaviour
 
     //ENEMY AI STARTS HERE
 
-    private void CalculateValue(Card card)
+    private void CalculateValue(int value)
     {
         // Debug.Log(card.rank);
         // Debug.Log(card.suit);
         // Debug.Log(card.value);
-        dealerScore = dealerScore + card.value;
-        TuzRecalculationHandling(true);
+        dealerScore = dealerScore + value;
+        AceRecalculationFinal(true);
         Debug.Log("dealer's score is" + dealerScore);
     }
 
@@ -238,7 +256,7 @@ public class GameController : MonoBehaviour
         }
             uiManager.UpdateDealersHealth(dealer.Showhp());
             uiManager.UpdatePlayersHealth(player.Showhp());
-            // CheckGameEnd();
+            CheckGameEnd();
         
     }
 
@@ -257,24 +275,67 @@ public class GameController : MonoBehaviour
 
     public void PlayerWon()
     {
-        player.AdjustHP(20);
-        dealer.AdjustHP(-20);
+        player.AdjustHP((int)Bet.value);
+        dealer.AdjustHP(-(int)Bet.value);
     }
        public void PlayerLost()
     {
-        player.AdjustHP(-20);
-        dealer.AdjustHP(20);
+        player.AdjustHP(-(int)Bet.value);
+        dealer.AdjustHP((int)Bet.value);
     }
 
 
-    // public void CheckGameEnd()
+public void CheckGameEnd()
+{
+    if(player.Showhp() <= 0 || dealer.Showhp() <= 0)
+    {
+        // End the game and maybe show some end game UI here
+        Debug.Log("Game Over! Resetting game...");
+        ResetGame();
+    }
+    else
+    {
+        // If no one is below 0 HP, restart the dealing process
+        ResetGame();
+    }
+}
+
+public void ResetGame()
+{
+
+
+    // Clear cards from both panels
+    foreach (Transform child in playerCardsPanel) {
+        Destroy(child.gameObject);
+    }
+    foreach (Transform child in dealerCardsPanel) {
+        Destroy(child.gameObject);
+    }
+
+    // Reset game state
+    userScore = 0;
+    dealerScore = 0;
+    aceCountPlayer = 0;  // Assuming you have these counters for aces
+    aceCountDealer = 0;
+
+    // Reset UI elements
+    uiManager.UpdateScore(0);  // Assuming you have a method to reset the score display
+
+
+    // Restart the dealing process
+    DealInitialCards();
+}
+
+
+
+
+
+    // public void DrawAce()                                //debug purposes
     // {
-    //     if(player.Showhp() >= 0 && dealer.Showhp()>=0)
-    //     {
-
-    //     }
+    //     Card playerCardDrawn =deckOfCards.DrawAce();
+    //     HandleDrawnAce(playerCardDrawn,false);                   //if drawn card is an Ace and userscore >21 then it becomes 1
+    //     DisplayCard(playerCardDrawn);
     // }
-
 
 
 }

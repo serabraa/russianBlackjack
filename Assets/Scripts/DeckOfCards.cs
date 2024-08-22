@@ -51,5 +51,11 @@ public class DeckOfCards
         cards.Remove(card);                                    //hanum enq kalodic
         return card;                                            
     }
+
+    // public Card DrawAce()        //debug purposes
+    // {
+    //     Card card = cards[12];
+    //     return card;
+    // }
     
 }
