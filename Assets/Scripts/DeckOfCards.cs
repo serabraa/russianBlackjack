@@ -6,10 +6,12 @@ public class DeckOfCards
 {
     private List<Card> cards;
     private Sprite cardBack;
+    private int numberOfDecks;
 
 
-    public DeckOfCards()
+    public DeckOfCards(int numberOfDecks = 1)
     {
+        this.numberOfDecks = numberOfDecks;
         cards = new List<Card>();
         InitializeDeck();
     }
@@ -27,7 +29,8 @@ public class DeckOfCards
 
         string pathToback = "Cards/CardBack";              
         cardBack = Resources.Load<Sprite>(pathToback);    //cardback qcenq
-
+    for(int deck = 0; deck< numberOfDecks; deck++)        //deckeri qanakov ktpenq edqan deck, xosqi numberOfDecks = 4 => 4 kalod qart
+    {
         foreach(var suit in suits)
         {
             foreach(var rank in ranks)
@@ -38,6 +41,7 @@ public class DeckOfCards
                 cards.Add(card);
             }
         }
+    }
         
     }
     public Card DrawCard()          //card qashel
@@ -57,5 +61,10 @@ public class DeckOfCards
     //     Card card = cards[12];
     //     return card;
     // }
+    public bool IsDeckEmpty()
+    {
+        if (cards.Count <4){return true;}
+        return false;
+    }
     
 }

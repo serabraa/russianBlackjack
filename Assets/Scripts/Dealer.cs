@@ -1,3 +1,4 @@
+using UnityEngine;
 
 public class Dealer : HPRelated
 {
@@ -20,5 +21,10 @@ public class Dealer : HPRelated
         public int Showhp()
     {
         return dealerHealth;
+    }
+    public void Die()
+    {
+        Debug.Log("dead dealer :(");
+        dealerHealth =-1;
     }
 }

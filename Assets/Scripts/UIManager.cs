@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] public TMP_Text userScoreUI;
@@ -9,6 +10,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text drawUI;
     [SerializeField] public TMP_Text playersHealth;
     [SerializeField] public TMP_Text dealersHealth;
+    [SerializeField] public Button hit;
+    [SerializeField] public Button stand;
+    public TMP_Text betValue;
     
 
     
@@ -55,4 +59,17 @@ public class UIManager : MonoBehaviour
         drawUI.gameObject.SetActive(false);
         blackJackUI.gameObject.SetActive(false);
     }
+    
+    public void ChangeBetValue(float value)
+    {
+        betValue.SetText(""+Mathf.RoundToInt(value));
+    }
+
+    public void HitStandActivity(bool parameter)
+    {
+        hit.gameObject.SetActive(parameter);
+        stand.gameObject.SetActive(parameter);
+    }
+
+    //create a method which makes hit and stand image's color alpha(transparency) to 50 in stead of hiding it completely
 }

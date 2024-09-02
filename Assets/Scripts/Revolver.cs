@@ -9,6 +9,7 @@ public class Revolver : MonoBehaviour
     [SerializeField] Sprite [] cylinderSprites;
     // [SerializeField] GameObject cylinder;
     [SerializeField] Image cylinderImage;
+    bool dealerIsShot = false;
 
 
     void Start()
@@ -70,16 +71,25 @@ public class Revolver : MonoBehaviour
         if(ammoCount== 0 || ammo[hammerIndex]==false)
         {
             Debug.Log("missing bullet or wrong hammer position");
+            dealerIsShot = false;
             return;
         }else 
         {
             ammo[hammerIndex]=false;
             ammoCount--;
             Debug.Log("Shot was taken");
+            dealerIsShot = true;
             ChangeCylinderSprite();
         }
+    }
 
-
+    public bool CheckHit()
+    {
+        if(dealerIsShot)
+        {
+            return true;
+        }
+        else return false;
     }
 
 }

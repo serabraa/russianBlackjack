@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections;
 
 
@@ -11,7 +10,6 @@ public class GameController : MonoBehaviour
 
     int userScore = 0;
     int dealerScore = 0;
-    // int changePosition = 140;
     bool enemyTurn = false;
     int aceCountPlayer= 0;              // ace counting to track the ace conditions
     int aceCountDealer = 0;             // ace counting to track the ace conditions
@@ -21,6 +19,7 @@ public class GameController : MonoBehaviour
     private DeckOfCards deckOfCards;
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
+    private Revolver revolver;
     [SerializeField] public UIManager uiManager;
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
@@ -30,12 +29,12 @@ public class GameController : MonoBehaviour
 
     void Start()
     {   
-        
         dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
         player.Setup(50);
-        deckOfCards = new DeckOfCards();
+        deckOfCards = new DeckOfCards(4);
+        revolver = new Revolver();
         DealInitialCards();
         CheckStateBeforeStand();
     }
@@ -43,6 +42,8 @@ public class GameController : MonoBehaviour
 
     private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
     {
+        IsDeckEmpty();
+        uiManager.HitStandActivity(true);
         Card playerCard1 = deckOfCards.DrawCard();
         Card playerCard2 = deckOfCards.DrawCard();
         Card enemyCard1 = deckOfCards.DrawCard();
@@ -156,8 +157,8 @@ public class GameController : MonoBehaviour
         image.sprite = card.cardImage;
 
         RectTransform rect = cardGameObject.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(128, 196); // Card size
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
+        rect.sizeDelta = new Vector2(128*2, 196*2); // Card size
+        // rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
 
         AdjustCardPosition(parentPanel, rect, isPlayer);
     }
@@ -167,6 +168,8 @@ public class GameController : MonoBehaviour
         int cardCount = parentPanel.childCount - 1; // Existing children count before adding new card
         float offset = cardCount * 140; // Horizontal offset; adjust as necessary
         rect.anchoredPosition = new Vector2(offset, 0); // Set position relative to the parent panel
+        Debug.Log($"Adjusting card position: Card Count = {parentPanel.childCount}, Offset = {offset}");
+        // offset = 0f;
     }
 
 
@@ -232,6 +235,7 @@ public class GameController : MonoBehaviour
         enemyTurn = true;
         hiddenCard.ExposeCard(); //exposes  the  hidden card
         ResetImage(hiddenCard, hiddenCardGO);   //resets image to display the hidden card
+        uiManager.HitStandActivity(false);
     }
 
     public void CheckState()
@@ -278,7 +282,7 @@ public class GameController : MonoBehaviour
         player.AdjustHP((int)Bet.value);
         dealer.AdjustHP(-(int)Bet.value);
     }
-       public void PlayerLost()
+    public void PlayerLost()
     {
         player.AdjustHP(-(int)Bet.value);
         dealer.AdjustHP((int)Bet.value);
@@ -303,15 +307,26 @@ public void CheckGameEnd()
 public void ResetGame()
 {
 
+    StartCoroutine(ClearCards());
 
-    // Clear cards from both panels
+}
+
+public IEnumerator ClearCards()
+{
+    yield return new WaitForSeconds(3);
     foreach (Transform child in playerCardsPanel) {
         Destroy(child.gameObject);
     }
     foreach (Transform child in dealerCardsPanel) {
         Destroy(child.gameObject);
     }
+    StartCoroutine(ResetGameNextFrame());
 
+}
+
+public IEnumerator ResetGameNextFrame()
+{
+    yield return null;
     // Reset game state
     userScore = 0;
     dealerScore = 0;
@@ -320,6 +335,7 @@ public void ResetGame()
 
     // Reset UI elements
     uiManager.UpdateScore(0);  // Assuming you have a method to reset the score display
+    uiManager.HideAllMessages();
 
 
     // Restart the dealing process
@@ -327,7 +343,20 @@ public void ResetGame()
 }
 
 
+public void IsDeckEmpty()
+{
+    bool result = deckOfCards.IsDeckEmpty();
+    Debug.Log(result);
+}
 
+
+public void CheckOnDealer()     //checking if a shot hit a dealer or not
+{
+    if(revolver.CheckHit()){
+        dealer.Die();
+        uiManager.UpdateDealersHealth(dealer.Showhp());
+    }
+}
 
 
     // public void DrawAce()                                //debug purposes
