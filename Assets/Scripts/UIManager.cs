@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text dealersHealth;
     [SerializeField] public Button hit;
     [SerializeField] public Button stand;
+    [SerializeField] public GameObject gameOver;
     public TMP_Text betValue;
     
 
@@ -71,5 +72,9 @@ public class UIManager : MonoBehaviour
         stand.gameObject.SetActive(parameter);
     }
 
+    public void gameOverToggle(bool value)
+    {
+        gameOver.gameObject.SetActive(value);
+    }
     //create a method which makes hit and stand image's color alpha(transparency) to 50 in stead of hiding it completely
 }

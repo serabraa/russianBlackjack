@@ -2,12 +2,13 @@ using UnityEngine;
 
 public class Dealer : HPRelated
 {
-    int dealerHealth=0;
+    private int dealerHealth = 0;
+    private IBossBehavior bossBehavior;
 
 
-    public Dealer ()
+    public Dealer (IBossBehavior behavior)
     {
-        
+        bossBehavior = behavior;
     }
     public void Setup(int amountHP)
     {
@@ -17,8 +18,12 @@ public class Dealer : HPRelated
     public void AdjustHP(int amountHP)
     {
         dealerHealth += amountHP;
+        if( dealerHealth<= 0)
+        {
+            Die();
+        }
     }
-        public int Showhp()
+    public int Showhp()
     {
         return dealerHealth;
     }
@@ -26,5 +31,11 @@ public class Dealer : HPRelated
     {
         Debug.Log("dead dealer :(");
         dealerHealth =-1;
+        bossBehavior.OnDefeated();
+    }
+
+    public void TakeTurn(GameController gameController)
+    {
+        bossBehavior.TakeTurn(gameController);
     }
 }

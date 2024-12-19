@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System;
+using UnityEditor;
 
 
 
@@ -8,18 +11,20 @@ public class GameController : MonoBehaviour
 {   
     
 
-    int userScore = 0;
-    int dealerScore = 0;
+    public int userScore = 0;
+    public int dealerScore = 0;
     bool enemyTurn = false;
     int aceCountPlayer= 0;              // ace counting to track the ace conditions
     int aceCountDealer = 0;             // ace counting to track the ace conditions
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
+    private int currentBossIndex = 0;   //current boss's index
+    private List<Dealer> bosses;        //list of the dealers who are represented as bosses
     private Player player;              // player for player things
     private DeckOfCards deckOfCards;
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
-    private Revolver revolver;
+    [SerializeField] private Revolver revolver;
     [SerializeField] public UIManager uiManager;
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
@@ -28,17 +33,41 @@ public class GameController : MonoBehaviour
 
 
     void Start()
-    {   
-        dealer = new Dealer();
+    { 
+        InitializeBosses();
+        StartNextBoss();  
+        // dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
         player.Setup(50);
         deckOfCards = new DeckOfCards(4);
-        revolver = new Revolver();
+        // revolver = new Revolver();
         DealInitialCards();
         CheckStateBeforeStand();
     }
 
+    private void StartNextBoss()
+    {
+        if(currentBossIndex < bosses.Count)
+        {
+            dealer = bosses[currentBossIndex];
+            currentBossIndex++;
+            Debug.Log($"You are now facing boss {currentBossIndex}.");
+        }else
+        {
+            Debug.Log("All bosses defeated!");
+        }
+    }
+
+    private void InitializeBosses()
+    {
+        bosses = new List<Dealer>
+        {
+            new Dealer(new RookieBehavior()),
+            new Dealer(new SatanBehavior())
+            
+        };
+    }
 
     private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
     {
@@ -173,7 +202,12 @@ public class GameController : MonoBehaviour
     }
 
 
-
+    public void DrawCardForBehavior() //sxal metod besamp, bayc hly or edpes. stexcvace or behaviorneri het ashxati
+    {
+        Card cardDrawn = deckOfCards.DrawCard();
+        HandleDrawnAce(cardDrawn,true); 
+        DisplayEnemyCard(cardDrawn);
+    }
     public void DrawCardPlayer()                        //this one is for the player's card drawing
     {
         Card playerCardDrawn = deckOfCards.DrawCard();
@@ -186,16 +220,7 @@ public class GameController : MonoBehaviour
     {
         if(enemyTurn==true)
         {   
-            while(dealerScore<17)
-             {
-                Card drawenCard = deckOfCards.DrawCard();
-                HandleDrawnAce(drawenCard,true); 
-                DisplayEnemyCard(drawenCard);
-            }
-            if(dealerScore >=17)
-            {
-                CheckState();
-            }
+            dealer.TakeTurn(this);
         }
 
     }
@@ -295,23 +320,29 @@ public void CheckGameEnd()
     {
         // End the game and maybe show some end game UI here
         Debug.Log("Game Over! Resetting game...");
-        ResetGame();
+        ResetGame(true);
+        StartNextBoss();
     }
     else
     {
         // If no one is below 0 HP, restart the dealing process
-        ResetGame();
+        ResetGame(false);
     }
 }
 
-public void ResetGame()
+public void ResetGame(bool isGameEnded)
 {
+    if(!isGameEnded)
+    {
+        StartCoroutine(ClearCardsAndResetGame());
+    }else
+        StartCoroutine(ClearCardsAndResetGame());
+    // uiManager.gameOverToggle(true);
 
-    StartCoroutine(ClearCards());
 
 }
 
-public IEnumerator ClearCards()
+public IEnumerator ClearCardsAndResetGame()
 {
     yield return new WaitForSeconds(3);
     foreach (Transform child in playerCardsPanel) {
