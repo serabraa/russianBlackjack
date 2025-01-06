@@ -29,4 +29,11 @@ public class Card
     {
         cardImage= cardImageReserve;
     }
+    public void SetCard(string suit, string rank, int value, Sprite CardImage)
+    {
+        this.suit = suit;
+        this.rank = rank;
+        this.value = value;
+        this.cardImage = CardImage;
+    }
 }

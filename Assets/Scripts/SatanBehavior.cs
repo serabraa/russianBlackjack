@@ -21,5 +21,6 @@ public class SatanBehavior : IBossBehavior
         {
             Debug.Log("Satan is impressed by your skill.");
         }
+        gameController.CheckState();
     }
 }

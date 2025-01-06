@@ -22,6 +22,8 @@ public class GameController : MonoBehaviour
     private List<Dealer> bosses;        //list of the dealers who are represented as bosses
     private Player player;              // player for player things
     private DeckOfCards deckOfCards;
+    private Card shownCard;             //shownCard of a Dealer. Is used in the GamblerBehavior
+    private GameObject shownCardGO;     //shownCard GO of a Dealer. Is used in the GamblerBehavior
     private Card hiddenCard;            //needs for a method ResetImage
     private GameObject hiddenCardGO;    //needed for a method ResetImage
     [SerializeField] private Revolver revolver;
@@ -34,8 +36,8 @@ public class GameController : MonoBehaviour
 
     void Start()
     { 
-        InitializeBosses();
-        StartNextBoss();  
+        InitializeBosses();     // dealer initialization
+        StartNextBoss();        // setting the first delaer by this method
         // dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
@@ -63,6 +65,7 @@ public class GameController : MonoBehaviour
     {
         bosses = new List<Dealer>
         {
+            new Dealer(new GamblerBehavior()),
             new Dealer(new RookieBehavior()),
             new Dealer(new SatanBehavior())
             
@@ -90,6 +93,9 @@ public class GameController : MonoBehaviour
         DisplayCard(playerCard2);
         DisplayEnemyCard(enemyCard1);
         DisplayEnemyCard(enemyCard2);
+
+    //
+        shownCard = enemyCard1;//for 2nd boss(Gambler)
         
 
     }
@@ -166,7 +172,7 @@ public class GameController : MonoBehaviour
         UpdateScore(card.value);
     }
 
-    private void DisplayEnemyCard(Card card)
+    public void DisplayEnemyCard(Card card)
     {
         CreateAndPositionCard(card, dealerCardsPanel, false);
         CalculateValue(card.value);
@@ -216,7 +222,7 @@ public class GameController : MonoBehaviour
     }
 
 
-    public void DrawCardForDealer()                 //if <17 the draw card for dealer
+    public void DealersTurn()                 //if <17 the draw card for dealer, for the stand button OnClick()
     {
         if(enemyTurn==true)
         {   
@@ -239,7 +245,7 @@ public class GameController : MonoBehaviour
 
     //ENEMY AI STARTS HERE
 
-    private void CalculateValue(int value)
+    private void CalculateValue(int value)  //calculates enemy's score
     {
         // Debug.Log(card.rank);
         // Debug.Log(card.suit);
@@ -397,5 +403,42 @@ public void CheckOnDealer()     //checking if a shot hit a dealer or not
     //     DisplayCard(playerCardDrawn);
     // }
 
+public Card JustDrawACard() //method for drawing a Card from the deck, used in the GamblerBehavior
+{
+    return deckOfCards.DrawCard();
+}
 
+public Card GetShownCard() //method for getting a shown card of a dealer at initial hand, used in the GamblerBehavior
+{
+    return shownCard;
+}
+public void SetShownCard(string suit, string rank, int value,Sprite cardImage)
+{
+    shownCard.SetCard(suit,rank,value,cardImage);
+}
+
+public Transform GetShownCardGO()
+{
+    return dealerCardsPanel.GetChild(0);    ////method for getting a shown card GameObject of a dealer at initial hand, used in the GamblerBehavior
+}
+public void RecalculateScore(Card original, Card replaced)  //method for recalculation of the dealer's score
+{
+        if(original.rank == "Ace" && replaced.rank == "Ace")
+        {
+            return;
+        }else if(original.rank == "Ace" && replaced.rank != "Ace")
+        {
+            aceCountDealer--;
+            dealerScore = dealerScore - original.value + replaced.value;
+            AceRecalculationFinal(true);
+        }else if(original.rank != "Ace" && replaced.rank == "Ace")
+        {
+            aceCountDealer++;
+            dealerScore = dealerScore - original.value + replaced.value;
+            AceRecalculationFinal(true);
+        }else dealerScore = dealerScore - original.value + replaced.value;
+        
+        
+        Debug.Log("dealer's score is" + dealerScore);
+}
 }

@@ -53,6 +53,7 @@ public class DeckOfCards
         Card card = cards[Random.Range(0,cards.Count)];        //ete ka random me cardm kqashenq kalodic
         // Debug.Log(card.value + card.rank);
         cards.Remove(card);                                    //hanum enq kalodic
+        // Debug.Log(cards.Count);//debug purposes
         return card;                                            
     }
 
