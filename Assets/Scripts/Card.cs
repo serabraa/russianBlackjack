@@ -29,6 +29,10 @@ public class Card
     {
         cardImage= cardImageReserve;
     }
+    public Sprite getExposedImage()
+    {
+        return cardImageReserve;
+    }
     public void SetCard(string suit, string rank, int value, Sprite CardImage)
     {
         this.suit = suit;

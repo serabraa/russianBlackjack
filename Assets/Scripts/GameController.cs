@@ -42,7 +42,7 @@ public class GameController : MonoBehaviour
         player = new Player();
         dealer.Setup(50);
         player.Setup(50);
-        deckOfCards = new DeckOfCards(4);
+        deckOfCards = new DeckOfCards(1);
         // revolver = new Revolver();
         DealInitialCards();
         CheckStateBeforeStand();
@@ -440,5 +440,17 @@ public void RecalculateScore(Card original, Card replaced)  //method for recalcu
         
         
         Debug.Log("dealer's score is" + dealerScore);
+}
+public List<Card> RemainingDeck()   //getting remaining cards of the deck
+{
+    return deckOfCards.GetRemainingCards();
+}
+public List<Card> GetFullDeck()     //getting cars of the full deck
+{
+    return deckOfCards.GetFullDeck();
+}
+public Card getHiddenCard()
+{
+    return hiddenCard;
 }
 }

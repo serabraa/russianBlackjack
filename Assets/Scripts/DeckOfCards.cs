@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
 public class DeckOfCards 
 {
-    private List<Card> cards;
+    private List<Card> cards; //remainingCards, cards that are being played
+    private List<Card> fullDeckCards; //All cards in the full deck
     private Sprite cardBack;
     private int numberOfDecks;
 
@@ -13,6 +15,7 @@ public class DeckOfCards
     {
         this.numberOfDecks = numberOfDecks;
         cards = new List<Card>();
+        fullDeckCards = new List<Card>();
         InitializeDeck();
     }
 
@@ -38,7 +41,8 @@ public class DeckOfCards
                 string path = $"Cards/{suit}_{rank}";
                 Sprite image = Resources.Load<Sprite>(path);
                 Card card = new Card(suit, rank, values[rank], image,cardBack);
-                cards.Add(card);
+                cards.Add(card);    //this is added to our actual playing cards
+                fullDeckCards.Add(card);    // this list is not being touched anywehre, it is only for keeping the initial full deck purposes
             }
         }
     }
@@ -57,15 +61,30 @@ public class DeckOfCards
         return card;                                            
     }
 
-    // public Card DrawAce()        //debug purposes
-    // {
-    //     Card card = cards[12];
-    //     return card;
-    // }
     public bool IsDeckEmpty()
     {
         if (cards.Count <4){return true;}
         return false;
     }
+
+    public List<Card> GetRemainingCards()   
+    {
+        return cards;  //returns a List of remaining cards
+    }    
+
+    public List<Card> GetFullDeck()
+    {
+        return fullDeckCards;  //return a List of initial full deck
+    }
+        // public Card DrawKing()
+    // {
+    //     Card card = cards[11];
+    //     return card; 
+    // }
+    // public Card DrawAce()        //debug purposes
+    // {
+    //     Card card = cards[12];
+    //     return card;
+    // }
     
 }
