@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using Unity.VisualScripting;
+using DG.Tweening;
 
 public class CardUIHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -11,7 +9,8 @@ public class CardUIHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     private Image cardImage;
     private Color originalColor;
     [SerializeField] private float hoverScale = 1.2f; // Scale factor on hover
-    // [SerializeField] private Color hoverColor = Color.gray; // Outline or border color (optional)ß
+    [SerializeField] private float hoverDuration = 0.2f; // Animation speed
+    [SerializeField] private Color hoverColor = Color.gray; // Outline or border color (optional)
 
 
     void Start()
@@ -23,13 +22,15 @@ public class CardUIHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        transform.localScale = originalScale * hoverScale;
-        // cardImage.color = hoverColor;
+        // Smoothly increase the size
+        transform.DOScale(originalScale * hoverScale, hoverDuration);
+
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        transform.localScale = originalScale;
-        // cardImage.color = originalColor;
+        // Smoothly return to original size
+        transform.DOScale(originalScale, hoverDuration);
+
     }
 }
