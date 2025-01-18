@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEditor;
+using DG.Tweening;
 
 
 
@@ -31,6 +32,12 @@ public class GameController : MonoBehaviour
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
     [SerializeField] private Slider Bet;                // Slider for placing a bet
+    // [SerializeField] Transform playerHandPanel;
+    // [SerializeField] Transform dealerHandPanel;
+    [SerializeField] Vector2 deckPosition;
+    [SerializeField] GameObject cardPrefab;
+    private List<Card> playerCards;
+    private List<Card> dealerCards;
 
 
 
@@ -42,7 +49,9 @@ public class GameController : MonoBehaviour
         player = new Player();
         dealer.Setup(50);
         player.Setup(50);
-        deckOfCards = new DeckOfCards(1);
+        deckOfCards = new DeckOfCards(1);   
+        playerCards = new List<Card>(); //list of player cards
+        dealerCards = new List<Card>(); //list of dealer cards
         // revolver = new Revolver();
         DealInitialCards();
         CheckStateBeforeStand();
@@ -71,34 +80,111 @@ public class GameController : MonoBehaviour
             
         };
     }
-
-    private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
+    void CleanEverything()
     {
-        IsDeckEmpty();
-        uiManager.HitStandActivity(true);
-        Card playerCard1 = deckOfCards.DrawCard();
-        Card playerCard2 = deckOfCards.DrawCard();
-        Card enemyCard1 = deckOfCards.DrawCard();
-        Card enemyCard2 = deckOfCards.DrawCard();
-    //
-        CountInitialAces(playerCard1,false);
-        CountInitialAces(playerCard2,false);
-        CountInitialAces(enemyCard1,true);
-        CountInitialAces(enemyCard2,true);
-    //
-        enemyCard2.HideCard();
-        hiddenCard = enemyCard2;
-        // Display cards on UI
-        DisplayCard(playerCard1);
-        DisplayCard(playerCard2);
-        DisplayEnemyCard(enemyCard1);
-        DisplayEnemyCard(enemyCard2);
+        playerCards.Clear();
+        dealerCards.Clear();
+    }
 
-    //
-        shownCard = enemyCard1;//for 2nd boss(Gambler)
+    private void DealInitialCards()
+    {
+        CleanEverything();
+        DrawCard(true);     //one for the player
+        DrawCard(true);     //two for the player
+        DrawCard(false);    // one for the dealer
+        DrawCard(false,true);    // two for the dealer,hidden
+    }
+
+    public void DrawCard(bool isPlayer)
+    {
+        Card drawnCard = deckOfCards.DrawCard();
+        if(isPlayer){
+            playerCards.Add(drawnCard);
+        }else dealerCards.Add(drawnCard);
+
+        AnimateCardDraw(drawnCard,isPlayer);
+    }
+    public void DrawCard(bool isPlayer, bool isHidden)
+    {
+        Card drawnCard = deckOfCards.DrawCard();
+        if(isPlayer){
+            playerCards.Add(drawnCard);
+        }else dealerCards.Add(drawnCard);
+        drawnCard.HideCard();
+        AnimateCardDraw(drawnCard,isPlayer);
+        }
+
+    private void AnimateCardDraw(Card card, bool isPlayer)
+    {
+        Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel; //Get the correct panel
+        List<Card> handList = isPlayer ? playerCards : dealerCards; // Get the correct list
+
+        // 1️⃣ Get the index to calculate spacing
+        int cardIndex = handList.Count - 1;
+        float cardSpacing = 60f; // Adjust spacing between cards
+        Vector3 offsetPosition = targetPanel.position + new Vector3(cardIndex * cardSpacing, 0, 0);
+
+
+        // Instatiating GameObjects to work with their Images
+        GameObject cardGO = Instantiate(cardPrefab,deckPosition,Quaternion.identity,targetPanel);
+        Image cardImage = cardGO.gameObject.GetComponent<Image>();
+        cardImage.sprite = card.cardBack;
+
+        //Storing the needed info of the hidden card UI
+        if (!isPlayer && handList.Count == 2)
+        {
+        hiddenCardGO = cardGO; // Store reference to the hidden card UI
+        hiddenCard = card; // Store the actual card object
+        }
+
+        // 5️⃣ Animate the card moving & scaling in
+        Sequence cardSequence = DOTween.Sequence();
+        cardSequence.Append(cardGO.transform.DOScale(1.2f, 0.4f)) // Slight scale-up
+                .Join(cardGO.transform.DOMove(offsetPosition, 0.6f).SetEase(Ease.OutQuad)) // Move with offset
+                .Join(cardGO.transform.DORotate(Vector3.forward * UnityEngine.Random.Range(-10, 10), 0.5f)) // Random tilt
+                .Append(cardGO.transform.DOScale(1f, 0.2f)) // Normalize scale
+                .AppendInterval(0.2f) // Wait before flipping
+                .AppendCallback(() => FlipCard(cardGO, card, isPlayer)); // Flip to show face-up
+    }
+    private void FlipCard(GameObject cardGO, Card card, bool isPlayer)
+{
+    Image cardImage = cardGO.GetComponent<Image>();
+    if (cardImage != null)
+    {
+        Sequence flipSequence = DOTween.Sequence();
+        flipSequence.Append(cardGO.transform.DORotate(new Vector3(0, 90, 0), 0.15f)) // Rotate halfway
+                    .AppendCallback(() => cardImage.sprite = card.cardImage) // Change to face-up
+                    .Append(cardGO.transform.DORotate(Vector3.zero, 0.15f)); // Rotate back to normal
+    }
+}
+
+    // private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
+    // {
+    //     IsDeckEmpty();
+    //     uiManager.HitStandActivity(true);
+    //     Card playerCard1 = deckOfCards.DrawCard();
+    //     Card playerCard2 = deckOfCards.DrawCard();
+    //     Card enemyCard1 = deckOfCards.DrawCard();
+    //     Card enemyCard2 = deckOfCards.DrawCard();
+    // //
+    //     CountInitialAces(playerCard1,false);
+    //     CountInitialAces(playerCard2,false);
+    //     CountInitialAces(enemyCard1,true);
+    //     CountInitialAces(enemyCard2,true);
+    // //
+    //     enemyCard2.HideCard();
+    //     hiddenCard = enemyCard2;
+    //     // Display cards on UI
+    //     DisplayCard(playerCard1);
+    //     DisplayCard(playerCard2);
+    //     DisplayEnemyCard(enemyCard1);
+    //     DisplayEnemyCard(enemyCard2);
+
+    // //
+    //     shownCard = enemyCard1;//for 2nd boss(Gambler)
         
 
-    }
+    // }
 
     // //////////// start of ace logic
     private void CountInitialAces(Card card, bool isEnemy)        //counts aces for further handling logic
@@ -166,59 +252,59 @@ public class GameController : MonoBehaviour
 
     // //////////// end of ace logic
 
-    private void DisplayCard(Card card)
-    {
-        CreateAndPositionCard(card, playerCardsPanel, true);
-        UpdateScore(card.value);
-    }
+    // private void DisplayCard(Card card)
+    // {
+    //     CreateAndPositionCard(card, playerCardsPanel, true);
+    //     UpdateScore(card.value);
+    // }
 
-    public void DisplayEnemyCard(Card card)
-    {
-        CreateAndPositionCard(card, dealerCardsPanel, false);
-        CalculateValue(card.value);
-    }
+    // public void DisplayEnemyCard(Card card)
+    // {
+    //     CreateAndPositionCard(card, dealerCardsPanel, false);
+    //     CalculateValue(card.value);
+    // }
 
-    private void CreateAndPositionCard(Card card, Transform parentPanel, bool isPlayer)
-    {
-        string cardName = isPlayer? "PlayerCard" : "DealelCard";
-        GameObject cardGameObject = new GameObject(cardName);
-        if (card == hiddenCard)
-        {
-            hiddenCardGO = cardGameObject;
-        }
-        cardGameObject.transform.SetParent(parentPanel, false);
+    // private void CreateAndPositionCard(Card card, Transform parentPanel, bool isPlayer)
+    // {
+    //     string cardName = isPlayer? "PlayerCard" : "DealelCard";
+    //     GameObject cardGameObject = new GameObject(cardName);
+    //     if (card == hiddenCard)
+    //     {
+    //         hiddenCardGO = cardGameObject;
+    //     }
+    //     cardGameObject.transform.SetParent(parentPanel, false);
 
-        Image image = cardGameObject.AddComponent<Image>();
-        image.sprite = card.cardImage;
+    //     Image image = cardGameObject.AddComponent<Image>();
+    //     image.sprite = card.cardImage;
 
-        RectTransform rect = cardGameObject.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(128*2, 196*2); // Card size
-        // rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
+    //     RectTransform rect = cardGameObject.GetComponent<RectTransform>();
+    //     rect.sizeDelta = new Vector2(128*2, 196*2); // Card size
+    //     // rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
 
-        AdjustCardPosition(parentPanel, rect, isPlayer);
-    }
+    //     AdjustCardPosition(parentPanel, rect, isPlayer);
+    // }
 
-    private void AdjustCardPosition(Transform parentPanel, RectTransform rect, bool isPlayer)
-    {
-        int cardCount = parentPanel.childCount - 1; // Existing children count before adding new card
-        float offset = cardCount * 140; // Horizontal offset; adjust as necessary
-        rect.anchoredPosition = new Vector2(offset, 0); // Set position relative to the parent panel
-        Debug.Log($"Adjusting card position: Card Count = {parentPanel.childCount}, Offset = {offset}");
-        // offset = 0f;
-    }
+    // private void AdjustCardPosition(Transform parentPanel, RectTransform rect, bool isPlayer)
+    // {
+    //     int cardCount = parentPanel.childCount - 1; // Existing children count before adding new card
+    //     float offset = cardCount * 140; // Horizontal offset; adjust as necessary
+    //     rect.anchoredPosition = new Vector2(offset, 0); // Set position relative to the parent panel
+    //     Debug.Log($"Adjusting card position: Card Count = {parentPanel.childCount}, Offset = {offset}");
+    //     // offset = 0f;
+    // }
 
 
     public void DrawCardForBehavior() //sxal metod besamp, bayc hly or edpes. stexcvace or behaviorneri het ashxati
     {
         Card cardDrawn = deckOfCards.DrawCard();
         HandleDrawnAce(cardDrawn,true); 
-        DisplayEnemyCard(cardDrawn);
+        // DisplayEnemyCard(cardDrawn);
     }
     public void DrawCardPlayer()                        //this one is for the player's card drawing
     {
         Card playerCardDrawn = deckOfCards.DrawCard();
         HandleDrawnAce(playerCardDrawn,false);                  //if drawn card is an Ace and userscore >21 then it becomes 1
-        DisplayCard(playerCardDrawn);
+        // DisplayCard(playerCardDrawn);
     }
 
 
@@ -256,16 +342,16 @@ public class GameController : MonoBehaviour
     }
 
 
-    private void ResetImage(Card card, GameObject cardGO)
+    private void ExposeHiddenCard(Card card, GameObject cardGO)
     {
-        Image image = cardGO.GetComponent<Image>();
-        image.sprite = card.cardImage;
+        card.ExposeCard();
+        FlipCard(hiddenCardGO,hiddenCard,false);
     }
     public void PlayerStand()
     {
         enemyTurn = true;
-        hiddenCard.ExposeCard(); //exposes  the  hidden card
-        ResetImage(hiddenCard, hiddenCardGO);   //resets image to display the hidden card
+        // ExposeHiddenCard(hiddenCard, hiddenCardGO);   //resets image to display the hidden card
+        ExposeHiddenCard(hiddenCard,hiddenCardGO);
         uiManager.HitStandActivity(false);
     }
 

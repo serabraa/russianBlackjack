@@ -1359,6 +1359,8 @@ MonoBehaviour:
   playerCardsPanel: {fileID: 700732037}
   dealerCardsPanel: {fileID: 369101693}
   Bet: {fileID: 1474064571}
+  deckPosition: {x: -128, y: -128}
+  cardPrefab: {fileID: 4635638382551334809, guid: bc60339e02a494318ba8abb23ed83f67, type: 3}
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3851,15 +3853,15 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 519420033}
         m_TargetAssemblyTypeName: GameController, Assembly-CSharp
-        m_MethodName: DrawCardPlayer
-        m_Mode: 1
+        m_MethodName: DrawCard
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
+          m_BoolArgument: 1
         m_CallState: 2
       - m_Target: {fileID: 519420033}
         m_TargetAssemblyTypeName: GameController, Assembly-CSharp
