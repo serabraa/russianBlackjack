@@ -13,7 +13,7 @@ public class RookieBehavior : IBossBehavior
     {
             while(gameController.dealerScore<17)
             {
-                gameController.DrawCardForBehavior();
+                gameController.DrawCard(false);
             }
             if(gameController.dealerScore >=17)
             {

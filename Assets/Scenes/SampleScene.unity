@@ -1351,7 +1351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee41860c997484275a8f5a791a9d3728, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  userScore: 0
+  playerScore: 0
   dealerScore: 0
   canvas: {fileID: 2031724158}
   revolver: {fileID: 519420035}

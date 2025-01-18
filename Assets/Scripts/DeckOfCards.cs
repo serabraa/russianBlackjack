@@ -81,10 +81,10 @@ public class DeckOfCards
     //     Card card = cards[11];
     //     return card; 
     // }
-    // public Card DrawAce()        //debug purposes
-    // {
-    //     Card card = cards[12];
-    //     return card;
-    // }
+    public Card DrawAce()        //debug purposes
+    {
+        Card card = cards[12];
+        return card;
+    }
     
 }

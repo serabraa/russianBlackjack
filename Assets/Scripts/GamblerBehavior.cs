@@ -23,7 +23,8 @@ public class GamblerBehavior : IBossBehavior
         while(gameController.dealerScore < 17)
         {
             Debug.Log("The Gambler draws card normally");
-            gameController.DrawCardForBehavior();
+            Debug.Log("dealers score " + gameController.dealerScore );
+            gameController.DrawCard(false);
         }
         gameController.CheckState();
     }
@@ -31,13 +32,14 @@ public class GamblerBehavior : IBossBehavior
     private void Bluff(GameController gameController)
     {
         Debug.Log("The Gambler bluffed!");
-        firstCard = gameController.GetShownCard();      // first card
+        // firstCard = gameController.GetShownCard();      // first card
         Card newCard = gameController.JustDrawACard();  // newCard
-        Transform firstCardGO = gameController.GetShownCardGO();    //getting first card's GO to change it's sprite to the new one
-        Image firstCardImage =firstCardGO.GetComponent<Image>();
-        firstCardImage.sprite = newCard.cardImage;  //sprite changed
-        Debug.Log(newCard.rank);
-        gameController.RecalculateScore(firstCard, newCard);    // and the score is recalculated
+        // Transform firstCardGO = gameController.GetShownCardGO();    //getting first card's GO to change it's sprite to the new one
+        // Image firstCardImage =firstCardGO.GetComponent<Image>();
+        // firstCardImage.sprite = newCard.cardImage;  //sprite changed
+        gameController.ReplaceShownCard(newCard);
+        Debug.Log($"the new card is " +newCard.rank);
+        
     }
 
 }

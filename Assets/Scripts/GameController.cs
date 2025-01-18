@@ -12,28 +12,22 @@ public class GameController : MonoBehaviour
 {   
     
 
-    public int userScore = 0;
+    public int playerScore = 0;
     public int dealerScore = 0;
     bool enemyTurn = false;
-    int aceCountPlayer= 0;              // ace counting to track the ace conditions
-    int aceCountDealer = 0;             // ace counting to track the ace conditions
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
     private int currentBossIndex = 0;   //current boss's index
     private List<Dealer> bosses;        //list of the dealers who are represented as bosses
     private Player player;              // player for player things
     private DeckOfCards deckOfCards;
-    private Card shownCard;             //shownCard of a Dealer. Is used in the GamblerBehavior
-    private GameObject shownCardGO;     //shownCard GO of a Dealer. Is used in the GamblerBehavior
-    private Card hiddenCard;            //needs for a method ResetImage
-    private GameObject hiddenCardGO;    //needed for a method ResetImage
+    private Card hiddenCard;            //is being used in AnimateCardDraw
+    private GameObject hiddenCardGO;    //is being used in AnimateCardDraw
     [SerializeField] private Revolver revolver;
     [SerializeField] public UIManager uiManager;
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
     [SerializeField] private Slider Bet;                // Slider for placing a bet
-    // [SerializeField] Transform playerHandPanel;
-    // [SerializeField] Transform dealerHandPanel;
     [SerializeField] Vector2 deckPosition;
     [SerializeField] GameObject cardPrefab;
     private List<Card> playerCards;
@@ -76,11 +70,12 @@ public class GameController : MonoBehaviour
         {
             new Dealer(new GamblerBehavior()),
             new Dealer(new RookieBehavior()),
+            
             new Dealer(new SatanBehavior())
             
         };
     }
-    void CleanEverything()
+    private void CleanEverything()
     {
         playerCards.Clear();
         dealerCards.Clear();
@@ -95,6 +90,38 @@ public class GameController : MonoBehaviour
         DrawCard(false,true);    // two for the dealer,hidden
     }
 
+    public void UpdateScore(bool isPlayer)      //now UpdateScore is used for both the player and the dealer, Ace Handling logic is inside
+    {   
+        int newScore = 0;
+        List<Card> targetList = isPlayer ? playerCards : dealerCards;   //selecting right cards list
+        int aceCount =0;
+
+        foreach(Card c in targetList)
+        {
+            newScore += c.value;
+            if(c.rank == "Ace")
+            {
+                aceCount++;
+            }
+        }
+        while(newScore >21 && aceCount !=0) //is being used for ace handling
+        {
+            newScore -=10;
+            aceCount--;
+        }
+
+        if(isPlayer)
+        {
+            playerScore = newScore;
+            uiManager.UpdateScore(newScore);
+        }else 
+        {
+            dealerScore = newScore;
+        }
+        Debug.Log($"Score for the {(isPlayer ?  "player" : "dealer" )} is {newScore}");
+        aceCount =0;
+    }
+
     public void DrawCard(bool isPlayer)
     {
         Card drawnCard = deckOfCards.DrawCard();
@@ -103,6 +130,7 @@ public class GameController : MonoBehaviour
         }else dealerCards.Add(drawnCard);
 
         AnimateCardDraw(drawnCard,isPlayer);
+        UpdateScore(isPlayer);
     }
     public void DrawCard(bool isPlayer, bool isHidden)
     {
@@ -112,6 +140,7 @@ public class GameController : MonoBehaviour
         }else dealerCards.Add(drawnCard);
         drawnCard.HideCard();
         AnimateCardDraw(drawnCard,isPlayer);
+        UpdateScore(isPlayer);
         }
 
     private void AnimateCardDraw(Card card, bool isPlayer)
@@ -158,156 +187,6 @@ public class GameController : MonoBehaviour
     }
 }
 
-    // private void DealInitialCards()                 //dealing initial two cards for the player and for the dealer
-    // {
-    //     IsDeckEmpty();
-    //     uiManager.HitStandActivity(true);
-    //     Card playerCard1 = deckOfCards.DrawCard();
-    //     Card playerCard2 = deckOfCards.DrawCard();
-    //     Card enemyCard1 = deckOfCards.DrawCard();
-    //     Card enemyCard2 = deckOfCards.DrawCard();
-    // //
-    //     CountInitialAces(playerCard1,false);
-    //     CountInitialAces(playerCard2,false);
-    //     CountInitialAces(enemyCard1,true);
-    //     CountInitialAces(enemyCard2,true);
-    // //
-    //     enemyCard2.HideCard();
-    //     hiddenCard = enemyCard2;
-    //     // Display cards on UI
-    //     DisplayCard(playerCard1);
-    //     DisplayCard(playerCard2);
-    //     DisplayEnemyCard(enemyCard1);
-    //     DisplayEnemyCard(enemyCard2);
-
-    // //
-    //     shownCard = enemyCard1;//for 2nd boss(Gambler)
-        
-
-    // }
-
-    // //////////// start of ace logic
-    private void CountInitialAces(Card card, bool isEnemy)        //counts aces for further handling logic
-    {
-        if(card.rank =="Ace")
-        {
-            int aceCount = isEnemy ? ++aceCountDealer: ++aceCountPlayer;
-            Debug.Log($"Ace count for {(isEnemy ? "dealer" : "player")} is {aceCount}");
-        }
-        
-    }
-
-    private void AceRecalculationFinal(bool isEnemy)         //handles initialy dealt ace value's logic (1 or 11)
-    {
-        
-        if(!isEnemy && aceCountPlayer!=0  && userScore>21 )
-        {
-            userScore -=10;
-            aceCountPlayer--;
-            Debug.Log("after -- ace count for the player is " + aceCountPlayer);
-        }else if(isEnemy && aceCountDealer!=0 && dealerScore>21 )
-        {
-            dealerScore-=10;
-            aceCountDealer--;
-            Debug.Log("after -- ace count for the dealer is " + aceCountDealer);
-        }
-    }
-    private void HandleDrawnAce(Card card,bool isEnemy)     // Ace check for cards that are being drawn, and value handling
-    {
-        if(card.rank=="Ace"){
-            int score = isEnemy? dealerScore:userScore;
-            if (score + card.value>21) {
-                if(isEnemy) dealerScore -= 10;
-                else userScore -= 10;
-            } else {
-                if(isEnemy) aceCountDealer++;
-                else aceCountPlayer++;
-                Debug.Log($"Ace count for {(isEnemy ? "dealer" : "player")} is {(isEnemy ? aceCountDealer : aceCountPlayer)}");
-            }
-        }
-    }
-    // private void DrawnAceHandlingPlayer(Card card)          // (player)
-    // {
-    //     if(card.rank=="Ace" && userScore + card.value >21)
-    //     {
-    //         userScore=userScore-10;
-    //     }else if(card.rank=="Ace" && userScore + card.value <=21)
-    //     {
-    //         aceCountPlayer++;
-    //         Debug.Log("ace count for the player is " + aceCountPlayer);
-    //     }
-    // }
-
-    // private void DrawnAceHandlingDealer(Card card)          // Ace check for cards that are being drawn, and value handling(dealer)
-    // {
-    //     if(card.rank=="Ace" && dealerScore + card.value >21)
-    //     {
-    //         dealerScore=dealerScore-10;
-    //     }else if(card.rank=="Ace" && dealerScore + card.value <=21)
-    //     {
-    //         aceCountDealer++;
-    //          Debug.Log("ace count for the dealer is " + aceCountDealer);
-    //     }
-    // }
-
-    // //////////// end of ace logic
-
-    // private void DisplayCard(Card card)
-    // {
-    //     CreateAndPositionCard(card, playerCardsPanel, true);
-    //     UpdateScore(card.value);
-    // }
-
-    // public void DisplayEnemyCard(Card card)
-    // {
-    //     CreateAndPositionCard(card, dealerCardsPanel, false);
-    //     CalculateValue(card.value);
-    // }
-
-    // private void CreateAndPositionCard(Card card, Transform parentPanel, bool isPlayer)
-    // {
-    //     string cardName = isPlayer? "PlayerCard" : "DealelCard";
-    //     GameObject cardGameObject = new GameObject(cardName);
-    //     if (card == hiddenCard)
-    //     {
-    //         hiddenCardGO = cardGameObject;
-    //     }
-    //     cardGameObject.transform.SetParent(parentPanel, false);
-
-    //     Image image = cardGameObject.AddComponent<Image>();
-    //     image.sprite = card.cardImage;
-
-    //     RectTransform rect = cardGameObject.GetComponent<RectTransform>();
-    //     rect.sizeDelta = new Vector2(128*2, 196*2); // Card size
-    //     // rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f); // Center anchor
-
-    //     AdjustCardPosition(parentPanel, rect, isPlayer);
-    // }
-
-    // private void AdjustCardPosition(Transform parentPanel, RectTransform rect, bool isPlayer)
-    // {
-    //     int cardCount = parentPanel.childCount - 1; // Existing children count before adding new card
-    //     float offset = cardCount * 140; // Horizontal offset; adjust as necessary
-    //     rect.anchoredPosition = new Vector2(offset, 0); // Set position relative to the parent panel
-    //     Debug.Log($"Adjusting card position: Card Count = {parentPanel.childCount}, Offset = {offset}");
-    //     // offset = 0f;
-    // }
-
-
-    public void DrawCardForBehavior() //sxal metod besamp, bayc hly or edpes. stexcvace or behaviorneri het ashxati
-    {
-        Card cardDrawn = deckOfCards.DrawCard();
-        HandleDrawnAce(cardDrawn,true); 
-        // DisplayEnemyCard(cardDrawn);
-    }
-    public void DrawCardPlayer()                        //this one is for the player's card drawing
-    {
-        Card playerCardDrawn = deckOfCards.DrawCard();
-        HandleDrawnAce(playerCardDrawn,false);                  //if drawn card is an Ace and userscore >21 then it becomes 1
-        // DisplayCard(playerCardDrawn);
-    }
-
-
     public void DealersTurn()                 //if <17 the draw card for dealer, for the stand button OnClick()
     {
         if(enemyTurn==true)
@@ -315,30 +194,6 @@ public class GameController : MonoBehaviour
             dealer.TakeTurn(this);
         }
 
-    }
-
-
-
-    public void UpdateScore(int value)
-    {
-
-        userScore = userScore + value;
-        AceRecalculationFinal(false);
-        uiManager.UpdateScore(userScore);
-        // CheckState();
-    }
-
-
-    //ENEMY AI STARTS HERE
-
-    private void CalculateValue(int value)  //calculates enemy's score
-    {
-        // Debug.Log(card.rank);
-        // Debug.Log(card.suit);
-        // Debug.Log(card.value);
-        dealerScore = dealerScore + value;
-        AceRecalculationFinal(true);
-        Debug.Log("dealer's score is" + dealerScore);
     }
 
 
@@ -350,28 +205,27 @@ public class GameController : MonoBehaviour
     public void PlayerStand()
     {
         enemyTurn = true;
-        // ExposeHiddenCard(hiddenCard, hiddenCardGO);   //resets image to display the hidden card
-        ExposeHiddenCard(hiddenCard,hiddenCardGO);
-        uiManager.HitStandActivity(false);
+        ExposeHiddenCard(hiddenCard,hiddenCardGO);  //exposes the hidden card
+
     }
 
     public void CheckState()
     {
 
-        if((userScore >dealerScore && userScore <=21) || dealerScore>21)
+        if((playerScore >dealerScore && playerScore <=21) || dealerScore>21)
         {
             uiManager.ShowMessage("win");
             PlayerWon();    
         }
-        else if((userScore<dealerScore && dealerScore<=21 )|| userScore  >21)
+        else if((playerScore<dealerScore && dealerScore<=21 )|| playerScore  >21)
         {
             uiManager.ShowMessage("lose");
             PlayerLost();
         }
-        else if(userScore==dealerScore)
+        else if(playerScore==dealerScore)
         {
             uiManager.ShowMessage("draw");
-        }else if(userScore==21 && dealerScore!= 21)
+        }else if(playerScore==21 && dealerScore!= 21)
         {
             uiManager.ShowMessage("blackjack");
         }
@@ -384,11 +238,11 @@ public class GameController : MonoBehaviour
     public void CheckStateBeforeStand()
     {
 
-        if(userScore == 21)
+        if(playerScore == 21)
         {
             uiManager.ShowMessage("blackjack");
         }
-        else if (userScore >21)
+        else if (playerScore >21)
         {
             uiManager.ShowMessage("lose");
         }
@@ -451,10 +305,8 @@ public IEnumerator ResetGameNextFrame()
 {
     yield return null;
     // Reset game state
-    userScore = 0;
+    playerScore = 0;
     dealerScore = 0;
-    aceCountPlayer = 0;  // Assuming you have these counters for aces
-    aceCountDealer = 0;
 
     // Reset UI elements
     uiManager.UpdateScore(0);  // Assuming you have a method to reset the score display
@@ -485,48 +337,78 @@ public void CheckOnDealer()     //checking if a shot hit a dealer or not
     // public void DrawAce()                                //debug purposes
     // {
     //     Card playerCardDrawn =deckOfCards.DrawAce();
-    //     HandleDrawnAce(playerCardDrawn,false);                   //if drawn card is an Ace and userscore >21 then it becomes 1
+    //     HandleDrawnAce(playerCardDrawn,false);                   //if drawn card is an Ace and playerscore >21 then it becomes 1
     //     DisplayCard(playerCardDrawn);
     // }
 
 public Card JustDrawACard() //method for drawing a Card from the deck, used in the GamblerBehavior
 {
-    return deckOfCards.DrawCard();
+    Card drawnCard = deckOfCards.DrawCard();
+    dealerCards.Add(drawnCard);
+    return drawnCard;
 }
 
 public Card GetShownCard() //method for getting a shown card of a dealer at initial hand, used in the GamblerBehavior
 {
-    return shownCard;
-}
-public void SetShownCard(string suit, string rank, int value,Sprite cardImage)
-{
-    shownCard.SetCard(suit,rank,value,cardImage);
+    return dealerCards[0];
 }
 
 public Transform GetShownCardGO()
 {
     return dealerCardsPanel.GetChild(0);    ////method for getting a shown card GameObject of a dealer at initial hand, used in the GamblerBehavior
 }
-public void RecalculateScore(Card original, Card replaced)  //method for recalculation of the dealer's score
+
+public void ReplaceShownCard(Card newCard) // Used in GamblerBehavior
 {
-        if(original.rank == "Ace" && replaced.rank == "Ace")
-        {
-            return;
-        }else if(original.rank == "Ace" && replaced.rank != "Ace")
-        {
-            aceCountDealer--;
-            dealerScore = dealerScore - original.value + replaced.value;
-            AceRecalculationFinal(true);
-        }else if(original.rank != "Ace" && replaced.rank == "Ace")
-        {
-            aceCountDealer++;
-            dealerScore = dealerScore - original.value + replaced.value;
-            AceRecalculationFinal(true);
-        }else dealerScore = dealerScore - original.value + replaced.value;
-        
-        
-        Debug.Log("dealer's score is" + dealerScore);
+    Transform shownCardGO = GetShownCardGO();
+    Card shownCard = GetShownCard();
+    if (shownCardGO == null) return; // Safety check
+
+    Image shownCardImage = shownCardGO.GetComponent<Image>();
+    if (shownCardImage == null) return; // Safety check
+
+    // Store the old card before replacing it
+    Card oldCard = shownCard; 
+    
+    // Adjusting the dealer's score
+    dealerScore -= shownCard.value;
+    dealerCards.Remove(oldCard);
+
+    // // Replace the visual representation
+    // shownCardImage.sprite = newCard.cardImage;
+
+    // Replace the logic reference
+    shownCard = newCard;
+    
+    // Recalculate the dealer's score
+    UpdateScore(false);
+
+    // Flip the new shown card
+    BluffCardAnimation(shownCardGO.gameObject, newCard);
 }
+private void BluffCardAnimation(GameObject cardGO, Card newCard)
+{
+    Image cardImage = cardGO.GetComponent<Image>();
+    if (cardImage == null) return; // Safety check
+
+    Sequence bluffSequence = DOTween.Sequence();
+
+    // Store the original color
+    Color originalColor = cardImage.color;
+
+    bluffSequence.Append(cardImage.DOColor(Color.red, 0.1f)) // 1️⃣ Flash red
+                 .Append(cardImage.DOColor(originalColor, 0.1f)) // 2️⃣ Restore original color
+                 .Append(cardImage.DOFade(0, 0.3f)) // 3️⃣ Fade out smoothly
+                 .AppendCallback(() => cardImage.sprite = newCard.cardImage) // 4️⃣ Change sprite AFTER fade-out
+                 .Append(cardImage.DOFade(1, 0.4f).SetEase(Ease.InOutQuad)) // 5️⃣ Smooth fade-in
+                 .Join(cardGO.transform.DOPunchScale(Vector3.one * 0.15f, 0.4f, 8, 0.8f)); // 6️⃣ More natural bounce
+
+    bluffSequence.Play();
+}
+
+
+
+
 public List<Card> RemainingDeck()   //getting remaining cards of the deck
 {
     return deckOfCards.GetRemainingCards();
