@@ -4,32 +4,45 @@ using DG.Tweening;
 
 public class PanelMover : MonoBehaviour
 {
-    [SerializeField] private RectTransform panel; // Assign your UI panel in the Inspector
+    [SerializeField] private RectTransform DeckPanel; // Assigned UI DeckPanel in the Inspector
+    [SerializeField] private RectTransform ShopPanel;
     [SerializeField] private Button closeButtonBackground; // Transparent full-screen button
-    [SerializeField] private Vector2 hiddenPosition; // Where the panel starts (off-screen)
-    [SerializeField] private Vector2 visiblePosition; // Where the panel moves to (on-screen)
+    [SerializeField] private Vector2 hiddenPosition; // Where the DeckPanel starts (off-screen)
+    [SerializeField] private Vector2 visiblePosition; // Where the DeckPanel moves to (on-screen)
     [SerializeField] private float moveDuration = 0.5f; // Time for the animation
 
-    private bool isPanelVisible = false;
+    [SerializeField] private Vector2 hiddenShopPosition;
+    [SerializeField] private Vector2 visibleShopPosition;
+    private bool isShopPanelVisible = false;
+    private bool isBossDeckPanelVisible = false;            //bool if is visible
+
+    private bool isDeckPanelVisible = false;
 
     void Start()
     {
-        // Set the panel to the hidden position at the start
-        panel.anchoredPosition = hiddenPosition;
+        // Set the DeckPanel to the hidden position at the start
+        DeckPanel.anchoredPosition = hiddenPosition;
+        // Set the ShopPanel to the hidden position at the start
+        ShopPanel.anchoredPosition = hiddenShopPosition;
 
     }
 
-    public void TogglePanel()
+    public void ToggleDeckPanel()
     {
-        isPanelVisible = !isPanelVisible;
+        isDeckPanelVisible = !isDeckPanelVisible;
 
         // Move to visible position if hidden, otherwise move back to hidden position
-        panel.DOAnchorPos(isPanelVisible ? visiblePosition : hiddenPosition, moveDuration)
+        DeckPanel.DOAnchorPos(isDeckPanelVisible ? visiblePosition : hiddenPosition, moveDuration)
             .SetEase(Ease.OutQuad);
         //dis/activating background close button
-        closeButtonBackground.gameObject.SetActive(isPanelVisible);
+        closeButtonBackground.gameObject.SetActive(isDeckPanelVisible);
+    }
 
-
-
+        public void TogglShopPanel()
+    {
+        isShopPanelVisible = !isShopPanelVisible;
+        // Move to visible position if hidden, otherwise move back to hidden position
+        ShopPanel.DOAnchorPos(isShopPanelVisible ? visibleShopPosition : hiddenShopPosition, moveDuration)
+            .SetEase(Ease.OutQuad);
     }
 }

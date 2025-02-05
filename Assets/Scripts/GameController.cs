@@ -11,9 +11,9 @@ using DG.Tweening;
 public class GameController : MonoBehaviour
 {   
     
-
     public int playerScore = 0;
     public int dealerScore = 0;
+    int currentAngerValue=0;
     bool enemyTurn = false;
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
@@ -30,6 +30,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private Slider Bet;                // Slider for placing a bet
     [SerializeField] Vector2 deckPosition;
     [SerializeField] GameObject cardPrefab;
+    [SerializeField] Slider anger;
     private List<Card> playerCards;
     private List<Card> dealerCards;
 
@@ -68,9 +69,9 @@ public class GameController : MonoBehaviour
     {
         bosses = new List<Dealer>
         {
-            new Dealer(new GamblerBehavior()),
+       
             new Dealer(new RookieBehavior()),
-            
+            new Dealer(new GamblerBehavior()),
             new Dealer(new SatanBehavior())
             
         };
@@ -252,11 +253,13 @@ public class GameController : MonoBehaviour
     {
         player.AdjustHP((int)Bet.value);
         dealer.AdjustHP(-(int)Bet.value);
+        SetAngerSlider();
     }
     public void PlayerLost()
     {
         player.AdjustHP(-(int)Bet.value);
         dealer.AdjustHP((int)Bet.value);
+        SetAngerSlider();
     }
 
 
@@ -420,5 +423,13 @@ public List<Card> GetFullDeck()     //getting cars of the full deck
 public Card getHiddenCard()
 {
     return hiddenCard;
+}
+public void SetAnger(int bossAnger)
+{
+    currentAngerValue = bossAnger;
+}
+public void SetAngerSlider()
+{
+    anger.value = currentAngerValue;
 }
 }

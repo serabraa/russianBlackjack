@@ -11,6 +11,7 @@ public class RookieBehavior : IBossBehavior
 
     public void TakeTurn(GameController gameController)
     {
+        gameController.SetAnger(90);
             while(gameController.dealerScore<17)
             {
                 gameController.DrawCard(false);
