@@ -18,12 +18,13 @@ public class RemainingDeckPanel : MonoBehaviour
         remainingDeckPanel.SetActive(true);
         ClearAll();
         CreateRemainingCards();
-       
         }
 
     public void CloseInfoPanel()
     {
         remainingDeckPanel.SetActive(false);
+                ClearAll();
+
     }
         // Returns remaining cards as a string
     public string RemainingDeck()
@@ -43,6 +44,7 @@ public class RemainingDeckPanel : MonoBehaviour
         // Clear existing cards in the grid
         foreach (Transform child in gridParent)
         {
+            Debug.Log(child);
             Destroy(child.gameObject);
         }
     }
@@ -53,7 +55,7 @@ public class RemainingDeckPanel : MonoBehaviour
         Debug.Log($"Full deck size: {fullDeckCards.Count}");
         List<Card> remainingCards = gameController.RemainingDeck();
         Debug.Log($"Remaining deck size: {remainingCards.Count}");
-        hiddenCard = gameController.getHiddenCard();
+        hiddenCard = gameController.GetHiddenCard();
 
         // Generate UI for each card
         foreach (var card in fullDeckCards)
@@ -84,4 +86,3 @@ public class RemainingDeckPanel : MonoBehaviour
         }    
     }
 }
-

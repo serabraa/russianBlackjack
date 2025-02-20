@@ -14,8 +14,6 @@ public class PanelMover : MonoBehaviour
     [SerializeField] private Vector2 hiddenShopPosition;
     [SerializeField] private Vector2 visibleShopPosition;
     private bool isShopPanelVisible = false;
-    private bool isBossDeckPanelVisible = false;            //bool if is visible
-
     private bool isDeckPanelVisible = false;
 
     void Start()
@@ -33,7 +31,21 @@ public class PanelMover : MonoBehaviour
 
         // Move to visible position if hidden, otherwise move back to hidden position
         DeckPanel.DOAnchorPos(isDeckPanelVisible ? visiblePosition : hiddenPosition, moveDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad)
+            .SetUpdate(true)
+            .OnComplete(() =>
+        {
+            // ✅ Wait until animation ends before affecting timeScale
+            if (isDeckPanelVisible)
+            {
+                Time.timeScale = 0f; // Pause after panel is fully opened
+            }
+            else
+            {
+                Time.timeScale = 1f; // Resume after panel is fully closed
+            }
+        });
+        
         //dis/activating background close button
         closeButtonBackground.gameObject.SetActive(isDeckPanelVisible);
     }

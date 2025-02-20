@@ -13,7 +13,9 @@ public class GameController : MonoBehaviour
     
     public int playerScore = 0;
     public int dealerScore = 0;
-    int currentAngerValue=0;
+    int currentAngerValue=0;        // anger value of the boss
+    int currentChillValue =0;       // chill value of the boss
+    int points = 0;                 // points for the shop. angerpoints
     bool enemyTurn = false;
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
@@ -21,16 +23,18 @@ public class GameController : MonoBehaviour
     private List<Dealer> bosses;        //list of the dealers who are represented as bosses
     private Player player;              // player for player things
     private DeckOfCards deckOfCards;
+    private DeckOfCards reserverDeckOfCards;
     private Card hiddenCard;            //is being used in AnimateCardDraw
     private GameObject hiddenCardGO;    //is being used in AnimateCardDraw
+    [SerializeField] private RemainingDeckPanel remainingDeckPanel;
     [SerializeField] private Revolver revolver;
     [SerializeField] public UIManager uiManager;
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
     [SerializeField] private Slider Bet;                // Slider for placing a bet
-    [SerializeField] Vector2 deckPosition;
+    [SerializeField] Vector2 deckPosition;              // position of the deck
     [SerializeField] GameObject cardPrefab;
-    [SerializeField] Slider anger;
+    [SerializeField] Slider anger;                      //anger bar
     private List<Card> playerCards;
     private List<Card> dealerCards;
 
@@ -70,7 +74,7 @@ public class GameController : MonoBehaviour
         bosses = new List<Dealer>
         {
        
-            new Dealer(new RookieBehavior()),
+            new Dealer(new RookieBehavior(this)),
             new Dealer(new GamblerBehavior()),
             new Dealer(new SatanBehavior())
             
@@ -89,6 +93,8 @@ public class GameController : MonoBehaviour
         DrawCard(true);     //two for the player
         DrawCard(false);    // one for the dealer
         DrawCard(false,true);    // two for the dealer,hidden
+        CheckBlackjack();       //check for a blackjack in an initial hand
+        CheckAnger();           //checks the level of the boss anger
     }
 
     public void UpdateScore(bool isPlayer)      //now UpdateScore is used for both the player and the dealer, Ace Handling logic is inside
@@ -198,16 +204,17 @@ public class GameController : MonoBehaviour
     }
 
 
-    private void ExposeHiddenCard(Card card, GameObject cardGO)
+    private void ExposeHiddenCard()
     {
-        card.ExposeCard();
+        hiddenCard.ExposeCard();
         FlipCard(hiddenCardGO,hiddenCard,false);
+        hiddenCard = null;
+        hiddenCardGO = null;
     }
     public void PlayerStand()
     {
         enemyTurn = true;
-        ExposeHiddenCard(hiddenCard,hiddenCardGO);  //exposes the hidden card
-
+        ExposeHiddenCard();  //exposes the hidden card
     }
 
     public void CheckState()
@@ -242,24 +249,63 @@ public class GameController : MonoBehaviour
         if(playerScore == 21)
         {
             uiManager.ShowMessage("blackjack");
+            ExposeHiddenCard();
+            PlayerWon();
+            ResetGame(true);
         }
         else if (playerScore >21)
         {
             uiManager.ShowMessage("lose");
+            ExposeHiddenCard();
+            PlayerLost();
+            ResetGame(false);
         }
     }
+        private void CheckBlackjack()
+    {
+        if (playerScore == 21)
+        {
+            PlayerWon();
+            ExposeHiddenCard();
+            ResetGame(false);
+        }
+    }
+        private void CheckAnger()
+        {
+            if(anger.value < 50)
+            {
+                return;
+            }else if(anger.value >=50 && anger.value<=70)
+            {
+                Debug.Log("anger value is up 50");
+                points++;
+            }else if(anger.value>70 && anger.value <=80)
+            {
+                Debug.Log("anger value is up 70");
+                points+=2;
+            }else if(anger.value>80 && anger.value <=90)
+            {
+                Debug.Log("anger value is up 80");
+                 points+=3;
+            }else if(anger.value>90)
+            {
+                Debug.Log("anger value is up 90");
+                 points+=5;
+            }
+            uiManager.UpdatePoints(points);
+        }
 
     public void PlayerWon()
     {
         player.AdjustHP((int)Bet.value);
         dealer.AdjustHP(-(int)Bet.value);
-        SetAngerSlider();
+        SetAngerSlider(true);
     }
     public void PlayerLost()
     {
         player.AdjustHP(-(int)Bet.value);
         dealer.AdjustHP((int)Bet.value);
-        SetAngerSlider();
+        SetAngerSlider(false);
     }
 
 
@@ -420,7 +466,7 @@ public List<Card> GetFullDeck()     //getting cars of the full deck
 {
     return deckOfCards.GetFullDeck();
 }
-public Card getHiddenCard()
+public Card GetHiddenCard()
 {
     return hiddenCard;
 }
@@ -428,8 +474,16 @@ public void SetAnger(int bossAnger)
 {
     currentAngerValue = bossAnger;
 }
-public void SetAngerSlider()
+public void SetAngerSlider(bool playerWon)
 {
-    anger.value = currentAngerValue;
+    if(playerWon)   
+    {
+        anger.value += currentAngerValue;        //if player wins, the dealer gets angry!!!
+    }else anger.value -= currentChillValue;      //else if player loses, the dealer gets chills!
+    
+}
+public void SetChill(int chill)
+{
+    currentChillValue = chill;
 }
 }

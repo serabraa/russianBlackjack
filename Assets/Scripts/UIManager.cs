@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text drawUI;
     [SerializeField] public TMP_Text playersHealth;
     [SerializeField] public TMP_Text dealersHealth;
+    [SerializeField] public TMP_Text pointsUI;
     [SerializeField] public Button hit;
     [SerializeField] public Button stand;
     [SerializeField] public GameObject gameOver;
@@ -32,6 +33,10 @@ public class UIManager : MonoBehaviour
     public void UpdateScore(int score)
     {
         userScoreUI.SetText("Score: " + score);
+    }
+    public void UpdatePoints(int points)
+    {
+        pointsUI.SetText("Points: " + points);
     }
 
     public void ShowMessage(string message)

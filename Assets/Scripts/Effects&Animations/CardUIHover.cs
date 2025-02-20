@@ -23,14 +23,16 @@ public class CardUIHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public void OnPointerEnter(PointerEventData eventData)
     {
         // Smoothly increase the size
-        transform.DOScale(originalScale * hoverScale, hoverDuration);
+        transform.DOScale(originalScale * hoverScale, hoverDuration)
+        .SetUpdate(true);
 
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         // Smoothly return to original size
-        transform.DOScale(originalScale, hoverDuration);
+        transform.DOScale(originalScale, hoverDuration)
+        .SetUpdate(true);
 
     }
 }

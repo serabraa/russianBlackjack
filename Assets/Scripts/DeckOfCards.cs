@@ -52,13 +52,20 @@ public class DeckOfCards
     {
         if(cards.Count == 0)
         {
-            return null;            //ete card chka kalodi mej apa null
+            fullDeckCards.Clear();
+            RecreateDeck();            //ete card chka kalodi mej apa nor kalod enq gcum
         }
         Card card = cards[Random.Range(0,cards.Count)];        //ete ka random me cardm kqashenq kalodic
         // Debug.Log(card.value + card.rank);
         cards.Remove(card);                                    //hanum enq kalodic
         // Debug.Log(cards.Count);//debug purposes
         return card;                                            
+    }
+
+    public void RecreateDeck()
+    {
+        Debug.Log("Deck is empty! Creating a new one...");
+        InitializeDeck();
     }
 
     public bool IsDeckEmpty()
