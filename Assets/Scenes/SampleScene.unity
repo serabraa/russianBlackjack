@@ -825,7 +825,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.22600001, y: 0.5}
   m_AnchorMax: {x: 0.7764376, y: 1}
-  m_AnchoredPosition: {x: -3.499878, y: 1.0000305}
+  m_AnchoredPosition: {x: -3.499878, y: 1.000061}
   m_SizeDelta: {x: 7, y: -2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &369101694
@@ -1242,6 +1242,7 @@ MonoBehaviour:
   playerScore: 0
   dealerScore: 0
   canvas: {fileID: 2031724158}
+  remainingDeckPanel: {fileID: 519420037}
   revolver: {fileID: 519420035}
   uiManager: {fileID: 519420034}
   playerCardsPanel: {fileID: 700732037}
@@ -1250,6 +1251,7 @@ MonoBehaviour:
   deckPosition: {x: 1000, y: 1000}
   cardPrefab: {fileID: 4635638382551334809, guid: bc60339e02a494318ba8abb23ed83f67, type: 3}
   anger: {fileID: 1231943998}
+  bossImage: {fileID: 1085540026}
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2571,7 +2573,7 @@ GameObject:
   - component: {fileID: 1085540027}
   - component: {fileID: 1085540026}
   m_Layer: 5
-  m_Name: RookieDealer
+  m_Name: Dealer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2617,7 +2619,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: eabf36cd38ee447d5bea8a9eb3255220, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

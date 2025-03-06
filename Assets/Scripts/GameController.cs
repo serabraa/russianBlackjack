@@ -35,15 +35,27 @@ public class GameController : MonoBehaviour
     [SerializeField] Vector2 deckPosition;              // position of the deck
     [SerializeField] GameObject cardPrefab;
     [SerializeField] Slider anger;                      //anger bar
+    [SerializeField] Image bossImage;
+    [SerializeField] Sprite[,] bossSprites = new Sprite[6, 5]; // 6 bosses, 5 sprites each
     private List<Card> playerCards;
     private List<Card> dealerCards;
+    private Tweener faceShakeTween; // Store reference to the shake tween
 
 
-
+    private void LoadBossSprites()
+    {
+        // Manually assign sprites for each boss and anger level
+        bossSprites[0, 0] = Resources.Load<Sprite>("Faces/Rookie/rookieDealer");
+        bossSprites[0, 1] = Resources.Load<Sprite>("Faces/Rookie/rookieDealer2");
+        bossSprites[0, 2] = Resources.Load<Sprite>("Faces/Rookie/rookieDealer3");
+        bossSprites[0, 3] = Resources.Load<Sprite>("Faces/Rookie/rookieDealer4");
+        bossSprites[0, 4] = Resources.Load<Sprite>("Faces/Rookie/rookieDealer5");
+    }
     void Start()
     { 
         InitializeBosses();     // dealer initialization
         StartNextBoss();        // setting the first delaer by this method
+        LoadBossSprites();
         // dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
@@ -270,27 +282,78 @@ public class GameController : MonoBehaviour
             ResetGame(false);
         }
     }
+    // ✅ Public method to update the boss face sprite based on anger
+    public void UpdateBossFace(int faceIndex)
+    {
+        //currentBossIndex is needed here after the fix
+    if (bossImage.sprite == bossSprites[0, faceIndex]) return;
+
+    // ✅ Smooth transition using fade effect
+    Sequence faceTransition = DOTween.Sequence();
+    faceTransition.Append(bossImage.DOFade(0, 0.3f)) // 1️⃣ Fade out
+                  .AppendCallback(() => bossImage.sprite = bossSprites[0, faceIndex]) // 2️⃣ Change sprite
+                  .Append(bossImage.DOFade(1, 0.3f)); // 3️⃣ Fade in
+
+ 
+        // ✅ Stop previous shake animation (prevents stacking)
+    if (faceShakeTween != null && faceShakeTween.IsActive())
+    {
+        faceShakeTween.Kill();
+    }
+
+    // ✅ Continuous shake when anger is above 70
+    if (faceIndex > 1 && faceIndex < 4)  // Moderate anger
+    {
+        faceShakeTween = bossImage.transform.DOShakePosition(2f, 8f, 5, 50, false, true)
+            .SetLoops(-1, LoopType.Yoyo); // ✅ Keep shaking continuously
+    }
+    else if (faceIndex == 4) // Maximum anger
+    {
+        faceShakeTween = bossImage.transform.DOShakePosition(2.5f, 15f, 6, 60, false, true)
+            .SetLoops(-1, LoopType.Yoyo); // ✅ More intense continuous shake
+    }
+    else  // If anger drops below 70, stop shaking
+    {
+        if (faceShakeTween != null && faceShakeTween.IsActive())
+        {
+            faceShakeTween.Kill(); // ✅ Stop shaking completely
+        }
+    }
+    }
+    
+
+
         private void CheckAnger()
         {
             if(anger.value < 50)
             {
+                // bossImage.sprite = bossSprites[0,0];
+                UpdateBossFace(0);
                 return;
             }else if(anger.value >=50 && anger.value<=70)
             {
                 Debug.Log("anger value is up 50");
                 points++;
+                UpdateBossFace(1);
+                // bossImage.sprite = bossSprites[0,1];
             }else if(anger.value>70 && anger.value <=80)
             {
                 Debug.Log("anger value is up 70");
                 points+=2;
+                UpdateBossFace(2);
+                // bossImage.sprite = bossSprites[0,2];
             }else if(anger.value>80 && anger.value <=90)
             {
                 Debug.Log("anger value is up 80");
                  points+=3;
+                 UpdateBossFace(3);
+                //  bossImage.sprite = bossSprites[0,3];
             }else if(anger.value>90)
             {
                 Debug.Log("anger value is up 90");
                  points+=5;
+                 UpdateBossFace(4);
+                //  bossImage.sprite = bossSprites[0,4];
             }
             uiManager.UpdatePoints(points);
         }
@@ -476,12 +539,15 @@ public void SetAnger(int bossAnger)
 }
 public void SetAngerSlider(bool playerWon)
 {
-    if(playerWon)   
-    {
-        anger.value += currentAngerValue;        //if player wins, the dealer gets angry!!!
-    }else anger.value -= currentChillValue;      //else if player loses, the dealer gets chills!
-    
+    float targetValue = playerWon ? anger.value + currentAngerValue : anger.value - currentChillValue;
+
+    // ✅ Ensure the target value stays within slider limits
+    targetValue = Mathf.Clamp(targetValue, anger.minValue, anger.maxValue);
+
+    // ✅ Smoothly transition to the new anger value
+    anger.DOValue(targetValue, 2f).SetEase(Ease.OutQuad);
 }
+
 public void SetChill(int chill)
 {
     currentChillValue = chill;
