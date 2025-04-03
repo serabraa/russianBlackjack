@@ -11,14 +11,22 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text playersHealth;
     [SerializeField] public TMP_Text dealersHealth;
     [SerializeField] public TMP_Text pointsUI;
+    [SerializeField] public TMP_Text remainningCardsUI;
     [SerializeField] public Button hit;
     [SerializeField] public Button stand;
     [SerializeField] public GameObject gameOver;
+    [SerializeField] TMP_Text angerValueText;
     public TMP_Text betValue;
     
 
-    
- 
+    public void UpdateRemainingCards(int cards)
+    {
+        remainningCardsUI.SetText("remaining cards: " + cards);
+    }
+    public void UpdateAngerValue(int anger)
+    {
+        angerValueText.SetText("anger: " + anger);
+    }
     public void UpdateDealersHealth(int dealerHealth)
     {
         dealersHealth.SetText("Dealer's health is " + dealerHealth );

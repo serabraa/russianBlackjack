@@ -7,6 +7,7 @@ public class RookieBehavior : IBossBehavior
     public GameController gameController;
     public int getAngry = 20; //anger value(after dealer's loss)
     public int getChilly = 15;// chill value (after dealer's win)
+    public int quantityOfCards = 200;// 200 cards for the rookie behavior
 
 
     public RookieBehavior(GameController gameController)
@@ -14,6 +15,7 @@ public class RookieBehavior : IBossBehavior
         this.gameController = gameController;
         gameController.SetAnger(getAngry);
         gameController.SetChill(getChilly);
+        gameController.SetQuantityOfCards(quantityOfCards);
     }
     public void OnDefeated()
     {

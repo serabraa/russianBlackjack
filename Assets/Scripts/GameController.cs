@@ -13,8 +13,9 @@ public class GameController : MonoBehaviour
     
     public int playerScore = 0;
     public int dealerScore = 0;
-    int currentAngerValue=0;        // anger value of the boss
-    int currentChillValue =0;       // chill value of the boss
+    int currentAngerValue=0;        // anger CHANGE value of the boss, 20 for the first boss
+    int currentChillValue =0;       // chill CHANGE value of the boss 
+    int quantityOfCards = 0;        // number of cards which will be dealt during the game
     int points = 0;                 // points for the shop. angerpoints
     bool enemyTurn = false;
     public Canvas canvas;
@@ -26,8 +27,10 @@ public class GameController : MonoBehaviour
     private DeckOfCards reserverDeckOfCards;
     private Card hiddenCard;            //is being used in AnimateCardDraw
     private GameObject hiddenCardGO;    //is being used in AnimateCardDraw
+    [SerializeField] private Die die;
     [SerializeField] private RemainingDeckPanel remainingDeckPanel;
     [SerializeField] private Revolver revolver;
+    [SerializeField] private BossRevolver bossRevolver;
     [SerializeField] public UIManager uiManager;
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
@@ -55,7 +58,7 @@ public class GameController : MonoBehaviour
     { 
         InitializeBosses();     // dealer initialization
         StartNextBoss();        // setting the first delaer by this method
-        LoadBossSprites();
+        LoadBossSprites();      // loads the sprites of the bosses
         // dealer = new Dealer();
         player = new Player();
         dealer.Setup(50);
@@ -64,6 +67,7 @@ public class GameController : MonoBehaviour
         playerCards = new List<Card>(); //list of player cards
         dealerCards = new List<Card>(); //list of dealer cards
         // revolver = new Revolver();
+        bossRevolver.LoadGun(); //loading boss's gun. randomly in one chamber
         DealInitialCards();
         CheckStateBeforeStand();
     }
@@ -150,6 +154,7 @@ public class GameController : MonoBehaviour
 
         AnimateCardDraw(drawnCard,isPlayer);
         UpdateScore(isPlayer);
+        UpdateRemainingCards();
     }
     public void DrawCard(bool isPlayer, bool isHidden)
     {
@@ -160,8 +165,13 @@ public class GameController : MonoBehaviour
         drawnCard.HideCard();
         AnimateCardDraw(drawnCard,isPlayer);
         UpdateScore(isPlayer);
+        UpdateRemainingCards();
         }
 
+    public void UpdateRemainingCards() {
+        quantityOfCards--;
+        uiManager.UpdateRemainingCards(quantityOfCards);
+    }    
     private void AnimateCardDraw(Card card, bool isPlayer)
     {
         Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel; //Get the correct panel
@@ -273,7 +283,7 @@ public class GameController : MonoBehaviour
             ResetGame(false);
         }
     }
-        private void CheckBlackjack()
+        private void CheckBlackjack() //check this, maybe this is avelord
     {
         if (playerScore == 21)
         {
@@ -325,6 +335,7 @@ public class GameController : MonoBehaviour
 
         private void CheckAnger()
         {
+            die.CastADie();
             if(anger.value < 50)
             {
                 // bossImage.sprite = bossSprites[0,0];
@@ -335,27 +346,52 @@ public class GameController : MonoBehaviour
                 Debug.Log("anger value is up 50");
                 points++;
                 UpdateBossFace(1);
+                die.ToggleDie(true);
+                if(die.GetThrownNumber() == 0)
+                {
+                    bossRevolver.PullTrigger();
+                    Debug.Log("boss shoots the dealer!");
+                }
                 // bossImage.sprite = bossSprites[0,1];
             }else if(anger.value>70 && anger.value <=80)
             {
                 Debug.Log("anger value is up 70");
                 points+=2;
                 UpdateBossFace(2);
+                die.ToggleDie(true);
+                if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1)
+                {
+                    bossRevolver.PullTrigger();
+                    Debug.Log("boss shoots the dealer!");
+                }
                 // bossImage.sprite = bossSprites[0,2];
             }else if(anger.value>80 && anger.value <=90)
             {
                 Debug.Log("anger value is up 80");
                  points+=3;
                  UpdateBossFace(3);
+                die.ToggleDie(true);
+                if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1 || die.GetThrownNumber() == 2)
+                {
+                    bossRevolver.PullTrigger();
+                    Debug.Log("boss shoots the dealer!");
+                }
                 //  bossImage.sprite = bossSprites[0,3];
             }else if(anger.value>90)
             {
                 Debug.Log("anger value is up 90");
                  points+=5;
                  UpdateBossFace(4);
+                die.ToggleDie(true);
+                if(die.GetThrownNumber() != 5)
+                {
+                    bossRevolver.PullTrigger();
+                    Debug.Log("boss shoots the dealer!");
+                }
                 //  bossImage.sprite = bossSprites[0,4];
             }
             uiManager.UpdatePoints(points);
+            uiManager.UpdateAngerValue((int)anger.value);
         }
 
     public void PlayerWon()
@@ -410,6 +446,7 @@ public IEnumerator ClearCardsAndResetGame()
         Destroy(child.gameObject);
     }
     StartCoroutine(ResetGameNextFrame());
+    die.ToggleDie(false);
 
 }
 
@@ -551,5 +588,9 @@ public void SetAngerSlider(bool playerWon)
 public void SetChill(int chill)
 {
     currentChillValue = chill;
+}
+public void SetQuantityOfCards(int cards)
+{
+    quantityOfCards = cards;
 }
 }
