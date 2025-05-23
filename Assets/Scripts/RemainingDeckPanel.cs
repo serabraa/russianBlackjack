@@ -70,12 +70,12 @@ public class RemainingDeckPanel : MonoBehaviour
             cardImage.sprite = card.cardImage;   // Assign card face
             Debug.Log($"Instantiated card: {card.rank} of {card.suit}");
 
-            if(card == hiddenCard)
+            if(card == hiddenCard)              //if card is a hidden card, then we get it's sprite and assign it in the remainingdeckpanel as usual
             {
                 hiddenCardSprite = hiddenCard.getExposedImage();
                 cardImage.sprite = hiddenCardSprite;
                 Debug.Log($"Skipping hidden card: {card.rank} of {card.suit}");
-                continue;
+                continue;   //as we dont want a hidden card to be seen as a used card in our reaminingdeckpanel, we skip the part of signing it as used
             }
             if(!remainingCards.Contains(card))
             {

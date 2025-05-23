@@ -3,7 +3,9 @@ using TMPro;
 using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
+    [SerializeField] public TMP_Text userCountUI;//count
     [SerializeField] public TMP_Text userScoreUI;
+    [SerializeField] public TMP_Text dealerScoreUI;
     [SerializeField] public TMP_Text userWonUI;
     [SerializeField] public TMP_Text userLostUI;
     [SerializeField] public TMP_Text blackJackUI;
@@ -12,13 +14,27 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text dealersHealth;
     [SerializeField] public TMP_Text pointsUI;
     [SerializeField] public TMP_Text remainningCardsUI;
+    [SerializeField] public TMP_Text peekUI; //shows in the text form, whether we peek on the ammo or not
     [SerializeField] public Button hit;
     [SerializeField] public Button stand;
     [SerializeField] public GameObject gameOver;
     [SerializeField] TMP_Text angerValueText;
     public TMP_Text betValue;
     
+    public void UpdatePeekUI(bool isRight, int hammerPosition)
+    {
+        if(isRight){peekUI.SetText("you have peeked, the ammo is in the position " + (hammerPosition+1));}
+        else peekUI.SetText("you have peeked, the ammo is NOT in the position " + (hammerPosition+1));
+    }
+    public void UpdatePlayerScore(int score)
+    {
+        userScoreUI.SetText("Player's score is " + score);
+    }
 
+    public void UpdateDealerScore(int score)
+    {
+        dealerScoreUI.SetText("Dealer's score is " + score);
+    }
     public void UpdateRemainingCards(int cards)
     {
         remainningCardsUI.SetText("remaining cards: " + cards);
@@ -40,7 +56,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateScore(int score)
     {
-        userScoreUI.SetText("Score: " + score);
+        userCountUI.SetText("Count: " + score);
     }
     public void UpdatePoints(int points)
     {
@@ -83,6 +99,11 @@ public class UIManager : MonoBehaviour
     {
         hit.gameObject.SetActive(parameter);
         stand.gameObject.SetActive(parameter);
+    }
+    public void SetHitAndStandActive(bool isActive)
+    {
+        hit.interactable = isActive;
+        stand.interactable = isActive;
     }
 
     public void gameOverToggle(bool value)

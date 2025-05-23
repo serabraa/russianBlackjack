@@ -13,11 +13,17 @@ public class GameController : MonoBehaviour
     
     public int playerScore = 0;
     public int dealerScore = 0;
+    public int playerWins = 0;      //  WINS PER DEALER FOR THE PLAYER
+    public int dealerWins = 0;      //  WINS PER DEALER FOR THE DEALER
     int currentAngerValue=0;        // anger CHANGE value of the boss, 20 for the first boss
     int currentChillValue =0;       // chill CHANGE value of the boss 
     int quantityOfCards = 0;        // number of cards which will be dealt during the game
-    int points = 0;                 // points for the shop. angerpoints
+    int points = 100;                 // points for the shop. angerpoints
+    int jokerQuantity = 10;         //quantity of jokers(ability)
+    int chillPillQuantity = 10;     //quantity of chill pills(ability)
+    int revolverPeekQuantity = 10;   //quantity to peek cylinder of the revolver(ability)
     bool enemyTurn = false;
+    bool dealerIsAlive = true;
     public Canvas canvas;
     private Dealer dealer;              // dealer for dealer things
     private int currentBossIndex = 0;   //current boss's index
@@ -38,8 +44,11 @@ public class GameController : MonoBehaviour
     [SerializeField] Vector2 deckPosition;              // position of the deck
     [SerializeField] GameObject cardPrefab;
     [SerializeField] Slider anger;                      //anger bar
+    [SerializeField] Image angerFillImage;                 //filler for the anger bar
+    [SerializeField] Gradient angerGradient;
     [SerializeField] Image bossImage;
     [SerializeField] Sprite[,] bossSprites = new Sprite[6, 5]; // 6 bosses, 5 sprites each
+    [SerializeField] Sprite jokerSprite;
     private List<Card> playerCards;
     private List<Card> dealerCards;
     private Tweener faceShakeTween; // Store reference to the shake tween
@@ -69,7 +78,7 @@ public class GameController : MonoBehaviour
         // revolver = new Revolver();
         bossRevolver.LoadGun(); //loading boss's gun. randomly in one chamber
         DealInitialCards();
-        CheckStateBeforeStand();
+        // CheckStateBeforeStand();
     }
 
     private void StartNextBoss()
@@ -109,8 +118,9 @@ public class GameController : MonoBehaviour
         DrawCard(true);     //two for the player
         DrawCard(false);    // one for the dealer
         DrawCard(false,true);    // two for the dealer,hidden
-        CheckBlackjack();       //check for a blackjack in an initial hand
+        // CheckBlackjack();       //check for a blackjack in an initial hand
         CheckAnger();           //checks the level of the boss anger
+        CheckStateBeforeStand();    //check for a blackjack in an intial hand instead of using another method
     }
 
     public void UpdateScore(bool isPlayer)      //now UpdateScore is used for both the player and the dealer, Ace Handling logic is inside
@@ -265,7 +275,7 @@ public class GameController : MonoBehaviour
         
     }
 
-    public void CheckStateBeforeStand()
+    public void CheckStateBeforeStand() //check this also, maybe needs some refactoring with checkBlackjack()
     {
 
         if(playerScore == 21)
@@ -340,49 +350,49 @@ public class GameController : MonoBehaviour
             {
                 // bossImage.sprite = bossSprites[0,0];
                 UpdateBossFace(0);
-                return;
-            }else if(anger.value >=50 && anger.value<=70)
+                // return;
+            }else if(anger.value >=50 && anger.value<=70)   //5 tokos
             {
                 Debug.Log("anger value is up 50");
                 points++;
                 UpdateBossFace(1);
-                die.ToggleDie(true);
+                // die.ToggleDie(true);
                 if(die.GetThrownNumber() == 0)
                 {
                     bossRevolver.PullTrigger();
                     Debug.Log("boss shoots the dealer!");
                 }
                 // bossImage.sprite = bossSprites[0,1];
-            }else if(anger.value>70 && anger.value <=80)
+            }else if(anger.value>70 && anger.value <=80)    //10 tokos
             {
                 Debug.Log("anger value is up 70");
                 points+=2;
                 UpdateBossFace(2);
-                die.ToggleDie(true);
+                // die.ToggleDie(true);
                 if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1)
                 {
                     bossRevolver.PullTrigger();
                     Debug.Log("boss shoots the dealer!");
                 }
                 // bossImage.sprite = bossSprites[0,2];
-            }else if(anger.value>80 && anger.value <=90)
+            }else if(anger.value>80 && anger.value <=90)    //20 tokos
             {
                 Debug.Log("anger value is up 80");
                  points+=3;
                  UpdateBossFace(3);
-                die.ToggleDie(true);
+                // die.ToggleDie(true);
                 if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1 || die.GetThrownNumber() == 2)
                 {
                     bossRevolver.PullTrigger();
                     Debug.Log("boss shoots the dealer!");
                 }
                 //  bossImage.sprite = bossSprites[0,3];
-            }else if(anger.value>90)
+            }else if(anger.value>90)    //50 tokos
             {
                 Debug.Log("anger value is up 90");
                  points+=5;
                  UpdateBossFace(4);
-                die.ToggleDie(true);
+                // die.ToggleDie(true);
                 if(die.GetThrownNumber() != 5)
                 {
                     bossRevolver.PullTrigger();
@@ -391,30 +401,70 @@ public class GameController : MonoBehaviour
                 //  bossImage.sprite = bossSprites[0,4];
             }
             uiManager.UpdatePoints(points);
-            uiManager.UpdateAngerValue((int)anger.value);
+            // uiManager.UpdateAngerValue((int)anger.value);
+        }
+
+        private void UpdateFaceForChillPill(float value)
+        {
+            Debug.Log(value);
+            if(value < 50)
+            {
+                // bossImage.sprite = bossSprites[0,0];
+                UpdateBossFace(0);
+            }else if(value >=50 && value<=70)
+            {
+                Debug.Log("anger value is up 50");
+                UpdateBossFace(1);
+                // bossImage.sprite = bossSprites[0,1];
+            }else if(value>70 && value <=80)
+            {
+                Debug.Log("anger value is up 70");
+                UpdateBossFace(2);
+                // bossImage.sprite = bossSprites[0,2];
+            }else if(value>80 && value <=90)
+            {
+                Debug.Log("anger value is up 80");
+                 UpdateBossFace(3);
+                //  bossImage.sprite = bossSprites[0,3];
+            }else if(value>90)
+            {
+                Debug.Log("anger value is up 90");
+                 UpdateBossFace(4);
+                //  bossImage.sprite = bossSprites[0,4];
+            }
+            // uiManager.UpdateAngerValue((int)anger.value);
         }
 
     public void PlayerWon()
     {
-        player.AdjustHP((int)Bet.value);
-        dealer.AdjustHP(-(int)Bet.value);
+        uiManager.SetHitAndStandActive(false); //after win make hit and stand non-interactable
+        // player.AdjustHP((int)Bet.value);
+        // dealer.AdjustHP(-(int)Bet.value);
+        playerWins++;
+        uiManager.UpdatePlayerScore(playerWins);
+        Debug.Log("PLAYER WINSSS"+playerWins);
         SetAngerSlider(true);
     }
     public void PlayerLost()
     {
-        player.AdjustHP(-(int)Bet.value);
-        dealer.AdjustHP((int)Bet.value);
+        uiManager.SetHitAndStandActive(false); //after win make hit and stand non-interactable
+        // player.AdjustHP(-(int)Bet.value);
+        // dealer.AdjustHP((int)Bet.value);
+        dealerWins++;
+        uiManager.UpdateDealerScore(dealerWins);
+        Debug.Log("PLAYER LOSESS"+dealerWins);
         SetAngerSlider(false);
     }
 
 
-public void CheckGameEnd()
+public void CheckGameEnd()  //refactoring is needed
 {
-    if(player.Showhp() <= 0 || dealer.Showhp() <= 0)
+    if(quantityOfCards <0 || !dealerIsAlive) //dealerIsAlive jamanakavor lucum
     {
         // End the game and maybe show some end game UI here
         Debug.Log("Game Over! Resetting game...");
         ResetGame(true);
+        dealerIsAlive = true;
         StartNextBoss();
     }
     else
@@ -446,7 +496,7 @@ public IEnumerator ClearCardsAndResetGame()
         Destroy(child.gameObject);
     }
     StartCoroutine(ResetGameNextFrame());
-    die.ToggleDie(false);
+    // die.ToggleDie(false);
 
 }
 
@@ -464,6 +514,7 @@ public IEnumerator ResetGameNextFrame()
 
     // Restart the dealing process
     DealInitialCards();
+    uiManager.SetHitAndStandActive(true);
 }
 
 
@@ -478,10 +529,77 @@ public void CheckOnDealer()     //checking if a shot hit a dealer or not
 {
     if(revolver.CheckHit()){
         dealer.Die();
+        dealerIsAlive = false;
         uiManager.UpdateDealersHealth(dealer.Showhp());
     }
 }
 
+public int GetPlayerPoints()
+{
+    return points;
+}
+public void UpdatePlayerPoints(int spendPoints)
+{
+    points-=spendPoints;
+    uiManager.UpdatePoints(points);
+}
+public void AddJoker()
+{
+    jokerQuantity++;
+}
+public void UseJoker()
+{
+    if (jokerQuantity>0)
+    {
+        jokerQuantity--;
+        Card jokerCard = new Card("Joker", "Joker", 11, jokerSprite, jokerSprite);
+        playerCards.Add(jokerCard);
+
+        // Dynamically recalculate score like for Ace
+        int score = playerScore + 11;
+        while (score > 21)
+        {
+            score = score -1;
+            jokerCard.value = jokerCard.value -1;
+        }
+
+        AnimateCardDraw(jokerCard, true);
+        UpdateScore(true); // Recalculate full score
+    }
+}
+
+    public void AddChillPill()
+    {
+        chillPillQuantity++;
+    }
+    public void UseChillPill()
+    {
+        if(chillPillQuantity >0)
+        {
+            chillPillQuantity--;
+            ChangeAnger(40);
+        }
+    }
+    public void AddBullet()
+    {
+        revolver.AddAndPutABullet();    //bullet is added and put in the cylinder of the revolver
+    }
+    public void AddPeek()
+    {
+        revolverPeekQuantity++;
+    }
+    public void UsePeek()
+{   if(revolverPeekQuantity >0)
+    {revolverPeekQuantity--;
+        if (revolver.TakeALook())
+        {
+        Debug.Log("we took a look, there is an ammo");
+        uiManager.UpdatePeekUI(true, revolver.GetHammerIndex());
+        }else {Debug.Log("we took a look, there is no ammo");
+        uiManager.UpdatePeekUI(false, revolver.GetHammerIndex());}
+    }
+    Debug.Log("you dont have Peek ability!!!");
+}
 
     // public void DrawAce()                                //debug purposes
     // {
@@ -574,16 +692,41 @@ public void SetAnger(int bossAnger)
 {
     currentAngerValue = bossAnger;
 }
-public void SetAngerSlider(bool playerWon)
+public void SetAngerSlider(bool playerWon)      //if true = dealer is getting anrgy, else chills
 {
-    float targetValue = playerWon ? anger.value + currentAngerValue : anger.value - currentChillValue;
-
-    // ✅ Ensure the target value stays within slider limits
-    targetValue = Mathf.Clamp(targetValue, anger.minValue, anger.maxValue);
-
-    // ✅ Smoothly transition to the new anger value
-    anger.DOValue(targetValue, 2f).SetEase(Ease.OutQuad);
+    int delta = playerWon ? currentAngerValue : -currentChillValue;
+    UpdateAngerBy(delta);
 }
+
+public void ChangeAnger(int chillValue)
+{
+    UpdateAngerBy(-chillValue);
+    UpdateFaceForChillPill(anger.value); // Uses final anger value
+}
+
+private void UpdateAngerBy(int delta)       //needs adjustments, especially ANIMATIONS ON COMPLETE
+{
+    float startValue = anger.value;
+    float targetValue = Mathf.Clamp(startValue + delta, anger.minValue, anger.maxValue);
+
+    // Tween the slider value
+    anger.DOValue(targetValue, 2f)
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() => {
+        // Update face live as it changes
+        UpdateFaceForChillPill(anger.value);
+        uiManager.UpdateAngerValue((int)anger.value); // Final display update
+    });
+
+
+    // Tween the fill color using the gradient
+    DOTween.To(() => startValue, x =>
+    {
+        float t = Mathf.InverseLerp(anger.minValue, anger.maxValue, x);
+        angerFillImage.color = angerGradient.Evaluate(t);
+    }, targetValue, 2f).SetEase(Ease.OutQuad);
+}
+
 
 public void SetChill(int chill)
 {

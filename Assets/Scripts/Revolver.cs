@@ -39,9 +39,18 @@ public class Revolver : MonoBehaviour
         Debug.Log(ammo[hammerIndex]? "Bullet present" : "No bullet");
     }
 
+    public bool TakeALook() // look in the cylinder, is there an ammo?
+    {
+        return ammo[hammerIndex];
+    }
+    public int GetHammerIndex()
+    {
+        return hammerIndex;
+    }
+
     
     
-    public void BuyABullet()
+    public void AddAndPutABullet()
     {
         if (ammoCount == ammo.Length)
         {
