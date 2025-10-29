@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] public TMP_Text userCountUI;//count
@@ -15,9 +16,15 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_Text pointsUI;
     [SerializeField] public TMP_Text remainningCardsUI;
     [SerializeField] public TMP_Text peekUI; //shows in the text form, whether we peek on the ammo or not
+    [SerializeField] public TMP_Text dealerHitsUI;
+    [SerializeField] public TMP_Text dealerMissesUI;
+    [SerializeField] public TMP_Text jokerQuantityUI;
+    [SerializeField] public TMP_Text chillPillQuantityUI;
+    [SerializeField] public TMP_Text peekQuantityUI;
     [SerializeField] public Button hit;
     [SerializeField] public Button stand;
     [SerializeField] public GameObject gameOver;
+    [SerializeField] public GameObject gameWin;
     [SerializeField] TMP_Text angerValueText;
     public TMP_Text betValue;
     
@@ -52,7 +59,18 @@ public class UIManager : MonoBehaviour
     {
         playersHealth.SetText("Player's health is " + playerHealth );
     }
-
+    public void UpdateChilPillQuantity(int quant)
+    {
+        chillPillQuantityUI.SetText("" + quant);
+    }
+        public void UpdatePeekQuantity(int quant)
+    {
+        peekQuantityUI.SetText("" + quant);
+    }
+        public void UpdateJokerQuantity(int quant)
+    {
+        jokerQuantityUI.SetText("" + quant);
+    }
 
     public void UpdateScore(int score)
     {
@@ -61,6 +79,41 @@ public class UIManager : MonoBehaviour
     public void UpdatePoints(int points)
     {
         pointsUI.SetText("Points: " + points);
+    }
+    public void ShowGameOver()
+    {
+        gameOver.SetActive(true);
+        dealerHitsUI.gameObject.SetActive(false);
+    }
+    public void DealerShoots(bool hitOrMiss)
+    {
+        if(hitOrMiss == true)
+        {
+            gameOver.SetActive(true);
+            dealerHitsUI.SetText("Game is OVER! Angry dealer shot you!!!");
+        }
+        // dealerMissesUI.SetText("Lucky you! Dealer missed his shot!");
+    }
+
+    public void ToggleDealerMisses(bool state)
+{
+    dealerMissesUI.gameObject.SetActive(true);
+
+    // Optional: set text content if needed
+    dealerMissesUI.SetText("Lucky you! Dealer missed his shot!");
+
+    // Hide it after 2 seconds
+    StartCoroutine(HideDealerMissTextAfterDelay(3f));
+}
+
+    private IEnumerator HideDealerMissTextAfterDelay(float delay)
+{
+    yield return new WaitForSeconds(delay);
+    dealerMissesUI.gameObject.SetActive(false);
+}
+    public void ShowGameWin()
+    {
+        gameWin.SetActive(true);
     }
 
     public void ShowMessage(string message)
@@ -95,20 +148,20 @@ public class UIManager : MonoBehaviour
         betValue.SetText(""+Mathf.RoundToInt(value));
     }
 
-    public void HitStandActivity(bool parameter)
-    {
-        hit.gameObject.SetActive(parameter);
-        stand.gameObject.SetActive(parameter);
-    }
+    // public void HitStandActivity(bool parameter)
+    // {
+    //     hit.gameObject.SetActive(parameter);
+    //     stand.gameObject.SetActive(parameter);
+    // }
     public void SetHitAndStandActive(bool isActive)
     {
         hit.interactable = isActive;
         stand.interactable = isActive;
     }
 
-    public void gameOverToggle(bool value)
-    {
-        gameOver.gameObject.SetActive(value);
-    }
+    // public void gameOverToggle(bool value)
+    // {
+    //     gameOver.gameObject.SetActive(value);
+    // }
     //create a method which makes hit and stand image's color alpha(transparency) to 50 in stead of hiding it completely
 }

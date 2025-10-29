@@ -19,9 +19,9 @@ public class GameController : MonoBehaviour
     int currentChillValue =0;       // chill CHANGE value of the boss 
     int quantityOfCards = 0;        // number of cards which will be dealt during the game
     int points = 100;                 // points for the shop. angerpoints
-    int jokerQuantity = 10;         //quantity of jokers(ability)
-    int chillPillQuantity = 10;     //quantity of chill pills(ability)
-    int revolverPeekQuantity = 10;   //quantity to peek cylinder of the revolver(ability)
+    int jokerQuantity = 100;         //quantity of jokers(ability)
+    int chillPillQuantity = 0;     //quantity of chill pills(ability)
+    int revolverPeekQuantity = 0;   //quantity to peek cylinder of the revolver(ability)
     bool enemyTurn = false;
     bool dealerIsAlive = true;
     public Canvas canvas;
@@ -33,7 +33,7 @@ public class GameController : MonoBehaviour
     private DeckOfCards reserverDeckOfCards;
     private Card hiddenCard;            //is being used in AnimateCardDraw
     private GameObject hiddenCardGO;    //is being used in AnimateCardDraw
-    [SerializeField] private Die die;
+    // [SerializeField] private Die die;
     [SerializeField] private RemainingDeckPanel remainingDeckPanel;
     [SerializeField] private Revolver revolver;
     [SerializeField] private BossRevolver bossRevolver;
@@ -41,7 +41,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private Transform playerCardsPanel; // UI panel for player cards
     [SerializeField] private Transform dealerCardsPanel; // UI panel for dealer cards
     [SerializeField] private Slider Bet;                // Slider for placing a bet
-    [SerializeField] Vector2 deckPosition;              // position of the deck
+    [SerializeField] Transform deckPosition;              // position of the deck
     [SerializeField] GameObject cardPrefab;
     [SerializeField] Slider anger;                      //anger bar
     [SerializeField] Image angerFillImage;                 //filler for the anger bar
@@ -101,6 +101,8 @@ public class GameController : MonoBehaviour
        
             new Dealer(new RookieBehavior(this)),
             new Dealer(new GamblerBehavior()),
+           
+
             new Dealer(new SatanBehavior())
             
         };
@@ -182,38 +184,108 @@ public class GameController : MonoBehaviour
         quantityOfCards--;
         uiManager.UpdateRemainingCards(quantityOfCards);
     }    
-    private void AnimateCardDraw(Card card, bool isPlayer)
+    // The original AnimateCardDraw method with direct edits
+private void AnimateCardDraw(Card card, bool isPlayer)
+{
+    Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel;
+    List<Card> handList = isPlayer ? playerCards : dealerCards;
+
+    // 1️⃣ Get the index to calculate spacing for a *temporary* position
+    int cardIndex = handList.Count - 1;
+    float cardSpacing = Screen.width * 0.05f;
+    // CHANGED: Calculate a local position, not a world position.
+    // This is just a temporary spot for the card to land before centering.
+    Vector3 targetLocalPosition = new Vector3(cardIndex * cardSpacing, 0, 0);
+
+    // Instatiating GameObjects to work with their Images
+    GameObject cardGO = Instantiate(cardPrefab, deckPosition.position, Quaternion.identity, targetPanel);
+    Image cardImage = cardGO.gameObject.GetComponent<Image>();
+    cardImage.sprite = card.cardBack;
+
+    // Storing the needed info of the hidden card UI
+    if (!isPlayer && handList.Count == 2)
     {
-        Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel; //Get the correct panel
-        List<Card> handList = isPlayer ? playerCards : dealerCards; // Get the correct list
-
-        // 1️⃣ Get the index to calculate spacing
-        int cardIndex = handList.Count - 1;
-        float cardSpacing = 60f; // Adjust spacing between cards
-        Vector3 offsetPosition = targetPanel.position + new Vector3(cardIndex * cardSpacing, 0, 0);
-
-
-        // Instatiating GameObjects to work with their Images
-        GameObject cardGO = Instantiate(cardPrefab,deckPosition,Quaternion.identity,targetPanel);
-        Image cardImage = cardGO.gameObject.GetComponent<Image>();
-        cardImage.sprite = card.cardBack;
-
-        //Storing the needed info of the hidden card UI
-        if (!isPlayer && handList.Count == 2)
-        {
-        hiddenCardGO = cardGO; // Store reference to the hidden card UI
-        hiddenCard = card; // Store the actual card object
-        }
-
-        // 5️⃣ Animate the card moving & scaling in
-        Sequence cardSequence = DOTween.Sequence();
-        cardSequence.Append(cardGO.transform.DOScale(1.2f, 0.4f)) // Slight scale-up
-                .Join(cardGO.transform.DOMove(offsetPosition, 0.6f).SetEase(Ease.OutQuad)) // Move with offset
-                .Join(cardGO.transform.DORotate(Vector3.forward * UnityEngine.Random.Range(-10, 10), 0.5f)) // Random tilt
-                .Append(cardGO.transform.DOScale(1f, 0.2f)) // Normalize scale
-                .AppendInterval(0.2f) // Wait before flipping
-                .AppendCallback(() => FlipCard(cardGO, card, isPlayer)); // Flip to show face-up
+        hiddenCardGO = cardGO;
+        hiddenCard = card;
     }
+
+    // 5️⃣ Animate the card moving & scaling in
+    Sequence cardSequence = DOTween.Sequence();
+    cardSequence.Append(cardGO.transform.DOScale(1.2f, 0.4f))
+            // CHANGED: Use DOLocalMove to animate relative to the panel's pivot.
+            .Join(cardGO.transform.DOLocalMove(targetLocalPosition, 0.6f).SetEase(Ease.OutQuad))
+            .Join(cardGO.transform.DORotate(Vector3.forward * UnityEngine.Random.Range(-10, 10), 0.5f))
+            .Append(cardGO.transform.DOScale(1f, 0.2f))
+            .AppendInterval(0.2f)
+            .AppendCallback(() => FlipCard(cardGO, card, isPlayer))
+            .OnComplete(() =>
+             {
+                // Call the modified CenterHands to smoothly animate ALL cards.
+                // We pass a duration (e.g., 0.3 seconds) for the centering animation.
+                CenterHands(isPlayer, cardSpacing, 0.3f);
+             });
+}
+// The original CenterHands method, now modified to animate
+public void CenterHands(bool isPlayer, float cardSpacing, float duration = 0.3f)
+{
+    Transform panel = isPlayer ? playerCardsPanel : dealerCardsPanel;
+    int count = panel.childCount;
+    if (count == 0) return;
+
+    float totalSpan = cardSpacing * (count - 1);
+    float startX = -totalSpan * 0.5f;
+
+    for (int i = 0; i < count; i++)
+    {
+        var card = panel.GetChild(i);
+        float x = startX + i * cardSpacing;
+
+        // --- THE FIX IS HERE ---
+        // We now explicitly set the target y and z positions to 0.
+        // This forces every card to align perfectly on the panel's horizontal axis,
+        // no matter what its position was when the animation started.
+        card.DOLocalMove(new Vector3(x, 0, 0), duration)
+            .SetEase(Ease.OutQuad);
+    }
+}
+//     private void AnimateCardDraw(Card card, bool isPlayer)
+//     {
+//         Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel; //Get the correct panel
+//         List<Card> handList = isPlayer ? playerCards : dealerCards; // Get the correct list
+
+//         // 1️⃣ Get the index to calculate spacing
+//         int cardIndex = handList.Count - 1;
+//         float cardSpacing = Screen.width * 0.05f; // Adjust spacing between cards
+//         Debug.Log(cardSpacing + " is a card spacing");
+//         Debug.Log(targetPanel.position + "target panel's position");
+//         Vector3 offsetPosition = targetPanel.position + new Vector3(cardIndex * cardSpacing, 0, 0);
+
+
+//         // Instatiating GameObjects to work with their Images
+//         GameObject cardGO = Instantiate(cardPrefab,deckPosition.position,Quaternion.identity,targetPanel);
+//         Image cardImage = cardGO.gameObject.GetComponent<Image>();
+//         cardImage.sprite = card.cardBack;
+
+//         //Storing the needed info of the hidden card UI
+//         if (!isPlayer && handList.Count == 2)
+//         {
+//         hiddenCardGO = cardGO; // Store reference to the hidden card UI
+//         hiddenCard = card; // Store the actual card object
+//         }
+
+//         // 5️⃣ Animate the card moving & scaling in
+//         Sequence cardSequence = DOTween.Sequence();
+//         cardSequence.Append(cardGO.transform.DOScale(1.2f, 0.4f)) // Slight scale-up
+//                 .Join(cardGO.transform.DOMove(offsetPosition, 0.6f).SetEase(Ease.OutQuad)) // Move with offset
+//                 .Join(cardGO.transform.DORotate(Vector3.forward * UnityEngine.Random.Range(-10, 10), 0.5f)) // Random tilt
+//                 .Append(cardGO.transform.DOScale(1f, 0.2f)) // Normalize scale
+//                 .AppendInterval(0.2f) // Wait before flipping
+//                 .AppendCallback(() => FlipCard(cardGO, card, isPlayer)) // Flip to show face-up
+//                 .OnComplete(() =>
+//                  {
+//                     CenterHands(isPlayer, cardSpacing);
+//                  });
+//     }
     private void FlipCard(GameObject cardGO, Card card, bool isPlayer)
 {
     Image cardImage = cardGO.GetComponent<Image>();
@@ -225,6 +297,66 @@ public class GameController : MonoBehaviour
                     .Append(cardGO.transform.DORotate(Vector3.zero, 0.15f)); // Rotate back to normal
     }
 }
+
+//    public void CenterHands(bool isPlayer,float cardSpacing)
+//     {
+//         Transform panel = isPlayer ? playerCardsPanel : dealerCardsPanel;
+//         int count = panel.childCount;
+//         if (count == 0) return;
+
+//         // 1) compute pixel spacing from screen width
+
+
+//         // 2) total span = spacing * (n-1)
+//         float totalSpan = cardSpacing * (count - 1);
+
+//         // 3) we want the middle of that span at x=0,
+//         //    so first card sits at -totalSpan/2
+//         float startX = -totalSpan * 0.5f;
+
+//         for (int i = 0; i < count; i++)
+//         {
+//             var card = panel.GetChild(i);
+//             // set localPosition so it's centered on the panel’s pivot
+//             float x = startX + i * cardSpacing;
+//             card.localPosition = new Vector3(
+//                 x,
+//                 card.localPosition.y,
+//                 card.localPosition.z
+//             );
+//         }
+//     }
+//     private void CenterHands(bool isPlayer,float cardSpacing)
+//     {
+//         Transform targetPanel = isPlayer ? playerCardsPanel : dealerCardsPanel;
+//         Debug.Log(targetPanel.childCount + "children");
+//         if (targetPanel.childCount > 2)
+//         {
+//             foreach(Transform transformCard in targetPanel)
+//             {
+//                 transformCard.position = transformCard.position - new Vector3(cardSpacing , 0, 0);
+//                 Debug.Log("cardSpacing is " + cardSpacing / targetPanel.childCount);
+//             }
+//             foreach(Transform transformCard in targetPanel)
+//             {
+//                 Debug.Log(transformCard.position + " transform card;s position");
+//                 Debug.Log(transformCard.localPosition + " transform card;s localPosition");
+//             }
+
+//         }
+//         if (targetPanel.childCount > 3)
+//         {
+//             targetPanel.GetChild(targetPanel.childCount - 1).position = targetPanel.GetChild(targetPanel.childCount - 1).position - new Vector3(cardSpacing, 0, 0);
+//         }
+//     }
+
+// IEnumerator AdjustLastCardNextFrame(Transform targetPanel,float cardSpacing)
+// {
+//     yield return null; // Wait one frame
+
+//     Transform lastCard = targetPanel.GetChild(targetPanel.childCount - 1);
+//     lastCard.localPosition += new Vector3(cardSpacing / targetPanel.childCount, 0, 0);
+// }
 
     public void DealersTurn()                 //if <17 the draw card for dealer, for the stand button OnClick()
     {
@@ -345,63 +477,37 @@ public class GameController : MonoBehaviour
 
         private void CheckAnger()
         {
-            die.CastADie();
+            // die.CastADie();
             if(anger.value < 50)
             {
-                // bossImage.sprite = bossSprites[0,0];
+                points+= 5;
                 UpdateBossFace(0);
-                // return;
             }else if(anger.value >=50 && anger.value<=70)   //5 tokos
             {
                 Debug.Log("anger value is up 50");
-                points++;
+                points+=7;
                 UpdateBossFace(1);
-                // die.ToggleDie(true);
-                if(die.GetThrownNumber() == 0)
-                {
-                    bossRevolver.PullTrigger();
-                    Debug.Log("boss shoots the dealer!");
-                }
-                // bossImage.sprite = bossSprites[0,1];
+                TryToShoot(0.05f);  //5 percent to shoot
             }else if(anger.value>70 && anger.value <=80)    //10 tokos
             {
                 Debug.Log("anger value is up 70");
-                points+=2;
+                points+=10;
                 UpdateBossFace(2);
-                // die.ToggleDie(true);
-                if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1)
-                {
-                    bossRevolver.PullTrigger();
-                    Debug.Log("boss shoots the dealer!");
-                }
-                // bossImage.sprite = bossSprites[0,2];
+                TryToShoot(0.1f);
             }else if(anger.value>80 && anger.value <=90)    //20 tokos
             {
                 Debug.Log("anger value is up 80");
-                 points+=3;
-                 UpdateBossFace(3);
-                // die.ToggleDie(true);
-                if(die.GetThrownNumber() == 0 || die.GetThrownNumber() == 1 || die.GetThrownNumber() == 2)
-                {
-                    bossRevolver.PullTrigger();
-                    Debug.Log("boss shoots the dealer!");
-                }
-                //  bossImage.sprite = bossSprites[0,3];
+                points+=15;
+                UpdateBossFace(3);
+                TryToShoot(0.2f);
             }else if(anger.value>90)    //50 tokos
             {
                 Debug.Log("anger value is up 90");
-                 points+=5;
-                 UpdateBossFace(4);
-                // die.ToggleDie(true);
-                if(die.GetThrownNumber() != 5)
-                {
-                    bossRevolver.PullTrigger();
-                    Debug.Log("boss shoots the dealer!");
-                }
-                //  bossImage.sprite = bossSprites[0,4];
+                points+=30;
+                UpdateBossFace(4);
+                TryToShoot(0.5f);
             }
             uiManager.UpdatePoints(points);
-            // uiManager.UpdateAngerValue((int)anger.value);
         }
 
         private void UpdateFaceForChillPill(float value)
@@ -461,15 +567,16 @@ public void CheckGameEnd()  //refactoring is needed
 {
     if(quantityOfCards <0 || !dealerIsAlive) //dealerIsAlive jamanakavor lucum
     {
+        DecideWinner();
         // End the game and maybe show some end game UI here
         Debug.Log("Game Over! Resetting game...");
-        ResetGame(true);
-        dealerIsAlive = true;
-        StartNextBoss();
+        // ResetGame(true);
+        // dealerIsAlive = true;
+        // StartNextBoss();
     }
     else
     {
-        // If no one is below 0 HP, restart the dealing process
+        // If game is not ended, restart it
         ResetGame(false);
     }
 }
@@ -531,6 +638,7 @@ public void CheckOnDealer()     //checking if a shot hit a dealer or not
         dealer.Die();
         dealerIsAlive = false;
         uiManager.UpdateDealersHealth(dealer.Showhp());
+        uiManager.ShowGameWin();
     }
 }
 
@@ -546,12 +654,14 @@ public void UpdatePlayerPoints(int spendPoints)
 public void AddJoker()
 {
     jokerQuantity++;
+    uiManager.UpdateJokerQuantity(jokerQuantity);
 }
 public void UseJoker()
 {
     if (jokerQuantity>0)
     {
         jokerQuantity--;
+        uiManager.UpdateJokerQuantity(jokerQuantity);
         Card jokerCard = new Card("Joker", "Joker", 11, jokerSprite, jokerSprite);
         playerCards.Add(jokerCard);
 
@@ -566,17 +676,20 @@ public void UseJoker()
         AnimateCardDraw(jokerCard, true);
         UpdateScore(true); // Recalculate full score
     }
+    // CheckGameEnd();  needs fix, case when no remaining cards are left 
 }
 
     public void AddChillPill()
     {
         chillPillQuantity++;
+        uiManager.UpdateChilPillQuantity(chillPillQuantity);
     }
     public void UseChillPill()
     {
         if(chillPillQuantity >0)
         {
             chillPillQuantity--;
+            uiManager.UpdateChilPillQuantity(chillPillQuantity);
             ChangeAnger(40);
         }
     }
@@ -587,10 +700,13 @@ public void UseJoker()
     public void AddPeek()
     {
         revolverPeekQuantity++;
+        uiManager.UpdatePeekQuantity(revolverPeekQuantity);
     }
     public void UsePeek()
 {   if(revolverPeekQuantity >0)
-    {revolverPeekQuantity--;
+        {
+        revolverPeekQuantity--;
+        uiManager.UpdatePeekQuantity(revolverPeekQuantity);
         if (revolver.TakeALook())
         {
         Debug.Log("we took a look, there is an ammo");
@@ -673,9 +789,6 @@ private void BluffCardAnimation(GameObject cardGO, Card newCard)
     bluffSequence.Play();
 }
 
-
-
-
 public List<Card> RemainingDeck()   //getting remaining cards of the deck
 {
     return deckOfCards.GetRemainingCards();
@@ -736,4 +849,26 @@ public void SetQuantityOfCards(int cards)
 {
     quantityOfCards = cards;
 }
+private void TryToShoot(float chance)
+{
+    float roll = UnityEngine.Random.value; // returns 0.0 to 1.0
+    Debug.Log($"Shoot roll: {roll} (chance: {chance})");
+
+    if (roll < chance)
+    {
+        bool hitormiss = bossRevolver.PullTrigger();
+        Debug.Log("Dealer shoots, the result is " + hitormiss);
+        uiManager.DealerShoots(hitormiss);
+        if(hitormiss == false){uiManager.ToggleDealerMisses(true);} //shows the text for the miss
+        
+    }
+}
+private void DecideWinner()
+{
+    if(dealerWins <= playerWins)
+    {
+        uiManager.ShowGameWin();
+    }else uiManager.ShowGameOver();
+}
+
 }

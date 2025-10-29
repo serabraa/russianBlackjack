@@ -25,6 +25,7 @@ public class GamblerBehavior : IBossBehavior
             Debug.Log("The Gambler draws card normally");
             Debug.Log("dealers score " + gameController.dealerScore );
             gameController.DrawCard(false);
+            hasBluffed = false;
         }
         gameController.CheckState();
     }

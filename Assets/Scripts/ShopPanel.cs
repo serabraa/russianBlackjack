@@ -6,10 +6,10 @@ public class ShopPanel : MonoBehaviour
 {
     [SerializeField] GameObject shopPanel;
     [SerializeField] GameController gameController;
-    int jokerPrice = 15;
-    int chillPillPrice = 15;
-    int bulletPrice = 50;
-    int peekRevolverPrice = 20;
+    int jokerPrice = 25;
+    int chillPillPrice = 10;
+    int bulletPrice = 80;
+    int peekRevolverPrice = 40;
 public void openShopPanel()
 {
     shopPanel.SetActive(true);
